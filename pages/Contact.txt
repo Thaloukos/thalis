@@ -1,5 +1,6 @@
-# Contact
+# Get in Touch
 
 ## Thalis Theodoulidis
-email:  thalis.theodoulidis@gmail.com
-github: https://github.com/Thaloukos
+email:    thalis.theodoulidis@gmail.com
+linkedin: https://www.linkedin.com/in/thalis-t/
+github:   https://github.com/Thaloukos
