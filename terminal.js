@@ -366,7 +366,7 @@ function processCommand(cmd, silent) {
             }
 
             if (listPath === "~") {
-                Object.keys(pages).forEach(name => {
+                pageNames.forEach(name => {
                     elements.push(makeClickableNode(name, () => {
                         if (currentPath === "~/" + name) return "cat .";
                         return cdCommandFor(name) + " && cat .";
