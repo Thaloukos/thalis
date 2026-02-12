@@ -98,13 +98,13 @@
         var sp = Math.sin(camera.pitch);
         var offsetX = -sy * CFG.CAM_DIST * cp;
         var offsetZ = -cy * CFG.CAM_DIST * cp;
-        var offsetY = CFG.CAM_HEIGHT + CFG.CAM_DIST * sp * 0.5;
+        var offsetY = CFG.CAM_DIST * sp;
         camera.targetPos = v3(
             playerPos.x + offsetX,
             playerPos.y + offsetY,
             playerPos.z + offsetZ
         );
-        camera.pos = v3lerp(camera.pos, camera.targetPos, CFG.CAM_LERP + dt * 3);
+        camera.pos = camera.targetPos;
     }
 
     // ========== BUFFER ==========
