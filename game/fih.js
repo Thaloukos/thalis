@@ -318,20 +318,67 @@
         player.pos.z = Math.max(-hd, Math.min(hd, player.pos.z));
     }
 
+    // Multi-line sprite helper
+    function drawMultiLine(buf, cx, cy, lines, color) {
+        for (var r = 0; r < lines.length; r++) {
+            var line = lines[r];
+            var sx = cx - Math.floor(line.length / 2);
+            var sy = cy - Math.floor(lines.length / 2) + r;
+            for (var c = 0; c < line.length; c++) {
+                if (line[c] !== " ") {
+                    setCell(buf, sx + c, sy, line[c], color);
+                }
+            }
+        }
+    }
+
+    var playerSprites = {
+        right: [
+            "    ,/>>",
+            "  ,/  >>",
+            ">==/o >>",
+            "  `\\  >>",
+            "    `\\>>"
+        ],
+        left: [
+            "<<\\,    ",
+            "<<  \\,  ",
+            "<< o\\==<",
+            "<<  /`  ",
+            "<</`    "
+        ]
+    };
+
     function drawPlayer(buf) {
         var p = projectToScreen(player.pos, buf);
         if (!p) return;
-        var sprite = player.facingRight ? "><>" : "<><";
-        drawString(buf, p.x - 1, p.y, sprite, CFG.COLORS.player);
+        var lines = player.facingRight ? playerSprites.right : playerSprites.left;
+        drawMultiLine(buf, p.x, p.y, lines, CFG.COLORS.player);
     }
 
     // ========== NPC FISH ==========
     var npcFish = [];
     var npcSpecies = [
-        { sprites: ["><>", "<><"], name: "clown" },
-        { sprites: [">=>", "<=<"], name: "angel" },
-        { sprites: [">->", "<-<"], name: "dart" },
-        { sprites: [">=>>", "<<=>"], name: "big" }
+        { name: "clown",
+          right: [" />", ">=>", " \\>"],
+          left:  ["<\\ ", "<=<", "</  "],
+          bigRight: ["    ,/>>", "  ,/  >>", ">==/o >>", "  `\\  >>", "    `\\>>"],
+          bigLeft:  ["<<\\,    ", "<<  \\,  ", "<< o\\==<", "<<  /`  ", "<</`    "] },
+        { name: "angel",
+          right: [" /}", ">=}>", " \\}"],
+          left:  ["{\\  ", "<{=<", "{/  "],
+          bigRight: ["    /}}>", "  ,/ }}>", ">==>o}}>", "  `\\ }}>", "    \\}}>"],
+          bigLeft:  ["<{{\\    ", "<{{ \\,  ", "<{{o<==>", "<{{ /`  ", "<{{/    "] },
+        { name: "dart",
+          right: ["-/>", "-->", "-\\>"],
+          left:  ["<\\-", "<--", "</-"],
+          bigRight: ["  --/>>", " --/ >>", "------>", " --\\ >>", "  --\\>>"],
+          bigLeft:  ["<<\\--  ", "<< \\-- ", "<------", "<< /-- ", "<</--  "] },
+        { name: "big",
+          right: ["  ,/>>", ">==/>>", "  `\\>>"],
+          left:  ["<<\\,  ", "<<\\==<", "<</`  "],
+          bigRight: ["     ,/>>>", "  ,,/  >>>", ">===/ o>>>", "  ``\\  >>>", "     `\\>>>"],
+          bigLeft:  ["<<<\\,     ", "<<<  \\,,  ", "<<<o \\===<", "<<<  /``  ", "<<</`     "] }
     ];
 
     function initNPCs() {
@@ -401,20 +448,20 @@
             var p = projectToScreen(fish.pos, buf);
             if (!p || p.z < 0.5) continue;
             var sp = npcSpecies[fish.species];
-            var color = CFG.COLORS.npc[fish.species % CFG.COLORS.npc.length];
-            var sprite;
+            var color = depthColor(p.z, CFG.COLORS.npc[fish.species % CFG.COLORS.npc.length]);
             if (p.z > 25) {
-                // Very far: single char
-                sprite = fish.facingRight ? ">" : "<";
+                // Far: single line
+                var mid = fish.facingRight ? "><>" : "<><";
+                drawString(buf, p.x - 1, p.y, mid, color);
             } else if (p.z > 15) {
-                // Mid distance: short sprite
-                sprite = fish.facingRight ? "><" : "<>";
+                // Mid: 3-row sprite
+                var lines = fish.facingRight ? sp.right : sp.left;
+                drawMultiLine(buf, p.x, p.y, lines, color);
             } else {
-                // Close: full sprite
-                sprite = fish.facingRight ? sp.sprites[0] : sp.sprites[1];
+                // Close: big 5-row sprite
+                var lines = fish.facingRight ? sp.bigRight : sp.bigLeft;
+                drawMultiLine(buf, p.x, p.y, lines, color);
             }
-            var sx = p.x - Math.floor(sprite.length / 2);
-            drawString(buf, sx, p.y, sprite, depthColor(p.z, color));
         }
     }
 
@@ -478,15 +525,34 @@
 
     function drawSeaweed(buf, time) {
         var floorY = -CFG.TANK_H / 2;
+        var fronds = [
+            ["()", ")(", "()", ")("],
+            ["){", "({", "){", "({"],
+            ["}/", "{\\", "}/", "{\\"]
+        ];
+        var frondsThin = [
+            ["(", ")", "(", ")"],
+            [")", "(", ")", "("],
+            ["}", "{", "}", "{"]
+        ];
         for (var i = 0; i < seaweeds.length; i++) {
             var sw = seaweeds[i];
+            var patternWide = fronds[i % fronds.length];
+            var patternThin = frondsThin[i % frondsThin.length];
             for (var j = 0; j < sw.height; j++) {
                 var sway = Math.sin(time * 1.5 + sw.phase + j * 0.4) * 0.6;
                 var pos = v3(sw.baseX + sway, floorY + j + 0.5, sw.baseZ);
                 var p = projectToScreen(pos, buf);
                 if (!p || p.z < 0.5) continue;
-                var ch = (j + Math.floor(time * 2)) % 2 === 0 ? "(" : ")";
-                setCell(buf, p.x, p.y, ch, depthColor(p.z, CFG.COLORS.seaweed));
+                var col = depthColor(p.z, CFG.COLORS.seaweed);
+                var idx = (j + Math.floor(time * 1.5)) % patternWide.length;
+                if (p.z > 15) {
+                    // Far: single char
+                    setCell(buf, p.x, p.y, patternThin[idx], col);
+                } else {
+                    // Close: 2-char wide
+                    drawString(buf, p.x - 1, p.y, patternWide[idx], col);
+                }
             }
         }
     }
@@ -499,22 +565,33 @@
         "|___|"
     ];
 
+    var chestSpriteMid = [
+        "[_]",
+        "|_|"
+    ];
+
     function drawChest(buf) {
         var p = projectToScreen(chestPos, buf);
         if (!p || p.z < 0.5) return;
-        var scale = p.z < 12 ? 1 : 0;
-        if (scale === 0) {
-            // Far away: just a dot
-            setCell(buf, p.x, p.y, "#", depthColor(p.z, CFG.COLORS.chest));
+        var color = depthColor(p.z, CFG.COLORS.chest);
+        if (p.z > 20) {
+            // Far away: single char
+            setCell(buf, p.x, p.y, "#", color);
             return;
         }
+        if (p.z > 12) {
+            // Mid distance: small chest
+            drawMultiLine(buf, p.x, p.y, chestSpriteMid, color);
+            return;
+        }
+        // Close: full sprite
         for (var row = 0; row < chestSprite.length; row++) {
             var line = chestSprite[row];
             var sx = p.x - Math.floor(line.length / 2);
             var sy = p.y - chestSprite.length + row + 1;
             for (var col = 0; col < line.length; col++) {
                 if (line[col] !== " ") {
-                    setCell(buf, sx + col, sy, line[col], depthColor(p.z, CFG.COLORS.chest));
+                    setCell(buf, sx + col, sy, line[col], color);
                 }
             }
         }
