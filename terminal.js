@@ -342,9 +342,9 @@ function processCommand(cmd, silent) {
         case "help":
             [
                 "Available commands:",
-                "  ls [path]   List pages (ls, ls .., ls ~)",
-                "  cd <path>   Navigate (cd About, cd .., cd ../Contact)",
-                "  cat [path]  View content (cat, cat ., cat ../About)",
+                "  ls [path]   List pages",
+                "  cd [path]   Navigate",
+                "  cat [path]  View content",
                 "  clear       Clear the terminal",
                 "  help        Show this help message"
             ].forEach(line => elements.push(makeLineNode(line)));
