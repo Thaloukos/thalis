@@ -280,10 +280,10 @@
         var right = v3(Math.cos(camera.yaw), 0, -Math.sin(camera.yaw));
         var moveDir = v3(0, 0, 0);
 
-        if (keys["w"] || keys["arrowup"]) moveDir = v3add(moveDir, forward);
-        if (keys["s"] || keys["arrowdown"]) moveDir = v3sub(moveDir, forward);
-        if (keys["a"]) moveDir = v3sub(moveDir, right);
-        if (keys["d"]) moveDir = v3add(moveDir, right);
+        if (keys["KeyW"] || keys["ArrowUp"]) moveDir = v3add(moveDir, forward);
+        if (keys["KeyS"] || keys["ArrowDown"]) moveDir = v3sub(moveDir, forward);
+        if (keys["KeyA"]) moveDir = v3sub(moveDir, right);
+        if (keys["KeyD"]) moveDir = v3add(moveDir, right);
 
         if (v3len(moveDir) > 0.01) {
             moveDir = v3norm(moveDir);
@@ -300,9 +300,9 @@
             player.vel.z *= 0.85;
         }
 
-        if (keys[" "]) {
+        if (keys["Space"]) {
             player.vel.y = CFG.VERT_SPEED;
-        } else if (keys["shift"]) {
+        } else if (keys["ShiftLeft"] || keys["ShiftRight"]) {
             player.vel.y = -CFG.VERT_SPEED;
         } else {
             player.vel.y *= 0.85;
@@ -648,18 +648,18 @@
     var isLocked = false;
 
     function onKeyDown(e) {
-        var k = e.key.toLowerCase();
+        var k = e.code;
         // ESC is handled by pointer lock release → onPointerLockChange
-        if (k === "escape") return;
+        if (k === "Escape") return;
         keys[k] = true;
         // Prevent page scrolling for game keys
-        if (["w", "a", "s", "d", " ", "shift", "arrowup", "arrowdown", "arrowleft", "arrowright"].indexOf(k) >= 0) {
+        if (["KeyW", "KeyA", "KeyS", "KeyD", "Space", "ShiftLeft", "ShiftRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(k) >= 0) {
             e.preventDefault();
         }
     }
 
     function onKeyUp(e) {
-        keys[e.key.toLowerCase()] = false;
+        keys[e.code] = false;
     }
 
     function onMouseMove(e) {
