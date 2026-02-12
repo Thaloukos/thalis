@@ -74,6 +74,13 @@
             .clickable:hover {
                 color: #7777ff;
             }
+            .exec {
+                color: #55ff55;
+                font-weight: bold;
+            }
+            .exec:hover {
+                color: #77ff77;
+            }
             .line a {
                 color: #5599ff;
                 text-decoration: underline;
@@ -115,6 +122,10 @@
                 0%, 100% { background: #d0d0d0; color: black; }
                 50% { background: transparent; color: #d0d0d0; }
             }
+            #game-container {
+                user-select: none;
+                -webkit-user-select: none;
+            }
             @media (max-width: 600px) {
                 #terminal {
                     padding: 12px;
@@ -138,6 +149,7 @@
                 <span id="input-after"></span>
             </div>
         </div>
+        <script src="game/fih.js"></script>
         <script src="terminal.js"></script>
     </body>
 </html>
