@@ -2,5 +2,5 @@
 
 ## Thalis Theodoulidis
 email:    thalis.theodoulidis@gmail.com
-linkedin: https://www.linkedin.com/in/thalis-t/
-github:   https://github.com/Thaloukos
+linkedin: linkedin.com/in/thalis-t/
+github:   github.com/Thaloukos

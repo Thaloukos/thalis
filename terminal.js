@@ -60,7 +60,7 @@ function wordRight(pos) {
 }
 
 // --- Link detection ---
-const linkPattern = /(https?:\/\/[^\s]+)|([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g;
+const linkPattern = /(https?:\/\/[^\s]+)|([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})|([a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
 
 function escapeHTML(str) {
     const d = document.createElement("div");
@@ -80,6 +80,8 @@ function linkify(text) {
         const raw = match[0];
         if (match[2]) {
             parts.push('<a href="mailto:' + escapeHTML(raw) + '" target="_blank">' + escapeHTML(raw) + '</a>');
+        } else if (match[3]) {
+            parts.push('<a href="https://' + escapeHTML(raw) + '" target="_blank" rel="noopener">' + escapeHTML(raw) + '</a>');
         } else {
             parts.push('<a href="' + escapeHTML(raw) + '" target="_blank" rel="noopener">' + escapeHTML(raw) + '</a>');
         }
