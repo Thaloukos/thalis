@@ -27,6 +27,9 @@ const inputLine = document.getElementById("input-line");
 const cursorEl = document.querySelector("#input-line .cursor");
 
 function renderInput() {
+    cursorEl.style.animation = 'none';
+    cursorEl.offsetHeight;
+    cursorEl.style.animation = '';
     inputBefore.textContent = inputBuffer.slice(0, cursorPos);
     if (cursorPos < inputBuffer.length) {
         cursorEl.textContent = inputBuffer[cursorPos];
