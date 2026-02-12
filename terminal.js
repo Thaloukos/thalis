@@ -7,12 +7,29 @@ Promise.all(pageNames.map(name =>
         .then(text => { pages[name] = text.trimEnd(); })
 ));
 
+const sneakyCommands = [
+    "rm", "mv", "cp", "mkdir", "rmdir", "touch", "chmod", "chown", "chgrp",
+    "ln", "find", "grep", "sed", "awk", "sort", "uniq", "wc", "diff",
+    "tar", "zip", "unzip", "gzip", "gunzip", "curl", "wget", "ssh", "scp",
+    "ping", "traceroute", "netstat", "ifconfig", "ip", "dig", "nslookup",
+    "ps", "top", "htop", "kill", "killall", "df", "du", "free", "mount",
+    "umount", "fdisk", "mkfs", "dd", "whoami", "id", "su", "passwd",
+    "useradd", "userdel", "groupadd", "crontab", "systemctl", "service",
+    "journalctl", "dmesg", "lsof", "strace", "nmap", "iptables",
+    "apt", "yum", "dnf", "pacman", "brew", "pip", "npm", "git",
+    "docker", "kubectl", "man", "which", "alias", "export", "source",
+    "history", "tail", "head", "less", "more", "nano", "vim", "vi", "emacs",
+    "pwd", "env", "set", "unset", "xargs", "tee", "nc", "telnet",
+    "reboot", "shutdown", "halt", "poweroff"
+];
+
 let currentPath = "~";
 let inputBuffer = "";
 let cursorPos = 0;
 let commandHistory = [];
 let historyIndex = -1;
 let animating = false;
+let isRoot = false;
 let animationQueue = [];
 let lastTabInput = null;
 
@@ -167,7 +184,7 @@ function cdCommandFor(pageName) {
 
 // --- Prompt ---
 function getPromptHTML() {
-    return '<span class="prompt-user">guest@thalis</span>:<span class="prompt-path">' + currentPath + '</span><span class="prompt-dollar">$ </span>';
+    return '<span class="prompt-user">' + (isRoot ? 'root' : 'guest') + '@thalis</span>:<span class="prompt-path">' + currentPath + '</span><span class="prompt-dollar">$ </span>';
 }
 
 function updatePrompt() {
@@ -335,7 +352,18 @@ function processCommand(cmd, silent) {
         return;
     }
 
-    const parts = trimmed.split(/\s+/);
+    let effective = trimmed;
+    if (effective.startsWith("sudo ")) {
+        isRoot = true;
+        effective = effective.slice(5).trim();
+        if (!effective) {
+            updatePrompt();
+            scrollToBottom();
+            return;
+        }
+    }
+
+    const parts = effective.split(/\s+/);
     const command = parts[0];
     const args = parts.slice(1);
 
@@ -475,7 +503,11 @@ function processCommand(cmd, silent) {
         }
 
         default:
-            elements.push(makeLineNode(command + ": command not found"));
+            if (sneakyCommands.includes(command)) {
+                elements.push(makeLineNode(command + ": why are you trying to be sneaky?"));
+            } else {
+                elements.push(makeLineNode(command + ": command not found"));
+            }
             break;
     }
 
@@ -580,12 +612,19 @@ function getCompletionTargets(argPrefix) {
 }
 
 function getCompletions(input) {
-    const parts = input.split(/\s+/);
+    let prefix = "";
+    let effective = input;
+    if (effective.toLowerCase().startsWith("sudo ")) {
+        prefix = "sudo ";
+        effective = effective.slice(5);
+    }
+    const parts = effective.split(/\s+/);
     if (parts.length <= 1) {
-        const prefix = parts[0].toLowerCase();
-        if (!prefix) return [];
+        const p = parts[0].toLowerCase();
+        if (!p) return [];
         return commandNames
-            .filter(c => c.startsWith(prefix) && c !== prefix);
+            .filter(c => c.startsWith(p) && c !== p)
+            .map(c => prefix + c);
     }
     const cmd = parts[0].toLowerCase();
     if (!argCommands.includes(cmd)) return [];
@@ -593,7 +632,7 @@ function getCompletions(input) {
     const targets = getCompletionTargets(argPrefix);
     return targets
         .filter(t => t.toLowerCase().startsWith(argPrefix.toLowerCase()) && t.toLowerCase() !== argPrefix.toLowerCase())
-        .map(t => cmd + " " + t);
+        .map(t => prefix + cmd + " " + t);
 }
 
 // --- Keyboard ---
