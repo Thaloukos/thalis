@@ -319,9 +319,9 @@ function setInput(text) {
 }
 
 // --- Command processor ---
-function processCommand(cmd) {
+function processCommand(cmd, silent) {
     const trimmed = cmd.trim();
-    addPromptLine(cmd);
+    if (!silent) addPromptLine(cmd);
 
     if (!trimmed) {
         updatePrompt();
@@ -509,13 +509,14 @@ function simulateCommand(cmd) {
                         commandHistory.push(cmd);
                     }
                     historyIndex = commandHistory.length;
+                    addPromptLine(cmd);
                     const cmds = cmd.split("&&").map(c => c.trim());
                     cmds.forEach((c, idx) => {
                         if (idx === 0) {
-                            processCommand(c);
+                            processCommand(c, true);
                         } else {
                             enqueueOrRun(function () {
-                                processCommand(c);
+                                processCommand(c, true);
                             });
                         }
                     });
@@ -536,11 +537,7 @@ function navHome() {
 }
 
 function navMenu() {
-    if (isInSubpage()) {
-        runCommand("ls ..");
-    } else {
-        runCommand("ls");
-    }
+    runCommand("ls ~");
 }
 
 function navClear() {
@@ -780,7 +777,19 @@ document.addEventListener("keydown", function (e) {
         historyIndex = commandHistory.length;
         clearInput();
         removeHint();
-        processCommand(cmd);
+        addPromptLine(cmd);
+        const cmds = cmd.split("&&").map(c => c.trim());
+        cmds.forEach((c, idx) => {
+            if (idx === 0) {
+                processCommand(c, true);
+            } else {
+                (function(sub) {
+                    enqueueOrRun(function () {
+                        processCommand(sub, true);
+                    });
+                })(c);
+            }
+        });
     } else if (e.key === "Backspace") {
         e.preventDefault();
         if (cursorPos > 0) {
