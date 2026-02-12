@@ -402,7 +402,7 @@ function processCommand(cmd, silent) {
             }
 
             if (catPath === "~") {
-                elements.push(makeLineNode("cat: ~: Is a directory"));
+                elements.push(makeLineNode(welcomeText.replace("Welcome! ", "").replace(/ \^$/, "")));
             } else {
                 const pageName = catPath.replace("~/", "");
                 if (pages[pageName]) {
@@ -855,11 +855,20 @@ document.addEventListener("keydown", function (e) {
 
 terminal.addEventListener("click", function (e) {
     if (e.target.closest("#nav") || e.target.classList.contains("clickable") || e.target.tagName === "A") return;
+    if (window.matchMedia("(pointer: coarse)").matches && !animating) {
+        runCommand("cat .");
+        return;
+    }
     window.focus();
 });
 
 // Boot sequence
-const welcomeLine = addLine("Welcome! Type 'help' for available commands, or click a button ^");
+const isMobile = window.matchMedia("(pointer: coarse)").matches;
+const welcomeText = isMobile
+    ? "Welcome! Tap on the screen to view current page content or navigate with the buttons ^"
+    : "Welcome! Type 'help' for available commands, or click a button ^";
+const welcomeLine = addLine(welcomeText);
 welcomeLine.style.color = "#666";
+welcomeLine.classList.add("welcome");
 addLine("");
 updatePrompt();
