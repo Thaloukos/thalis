@@ -1,0 +1,4 @@
+# Games
+
+Play games directly in the terminal.
+Use 'ls' to see available games, 'cat' to learn more.

@@ -1,5 +1,9 @@
-const pageNames = ["About", "Projects", "Contact"];
+const isMobile = window.matchMedia("(pointer: coarse)").matches;
+const pageNames = isMobile
+    ? ["About", "Projects", "Contact"]
+    : ["About", "Projects", "Games", "Contact"];
 const pages = {};
+const executableMap = isMobile ? {} : { "Games": ["fih"] };
 
 Promise.all(pageNames.map(name =>
     fetch("/pages/" + name + ".txt")
@@ -20,7 +24,7 @@ const sneakyCommands = [
     "docker", "kubectl", "man", "which", "alias", "export", "source",
     "history", "tail", "head", "less", "more", "nano", "vim", "vi", "emacs",
     "pwd", "env", "set", "unset", "xargs", "tee", "nc", "telnet",
-    "reboot", "shutdown", "halt", "poweroff"
+    "reboot", "shutdown", "halt", "poweroff", "watch"
 ];
 
 let currentPath = "~";
@@ -29,6 +33,7 @@ let cursorPos = 0;
 let commandHistory = [];
 let historyIndex = -1;
 let animating = false;
+let gameMode = false;
 let isRoot = false;
 let animationQueue = [];
 let lastTabInput = null;
@@ -142,6 +147,7 @@ function isInSubpage() {
 function resolvePath(target) {
     if (!target || target === "~" || target === "/") return "~";
     if (target.length > 1 && target.endsWith("/")) target = target.slice(0, -1);
+    if (target.startsWith("./")) target = target.slice(2);
     if (target === ".") return currentPath;
 
     if (target === "..") {
@@ -299,6 +305,16 @@ function makeDirNode(text) {
     return { node: div, _fullText: text };
 }
 
+function makeExecNode(text, commandFn) {
+    const div = document.createElement("div");
+    div.className = "line clickable exec";
+    div.addEventListener("click", function () {
+        const cmd = typeof commandFn === "function" ? commandFn() : commandFn;
+        runCommand(cmd);
+    });
+    return { node: div, _fullText: text };
+}
+
 function makeColoredNode(text, color, opts) {
     const div = document.createElement("div");
     div.className = "line";
@@ -387,7 +403,7 @@ function processCommand(cmd, silent) {
             if (target) {
                 const resolved = resolvePath(target);
                 if (resolved === null) {
-                    elements.push(makeLineNode("ls: cannot access '" + target + "': No such file or directory"));
+                    elements.push(makeLineNode("ls: cannot access '" + target + "': No such directory"));
                     break;
                 }
                 listPath = resolved;
@@ -402,6 +418,9 @@ function processCommand(cmd, silent) {
                 });
             } else {
                 elements.push(makeClickableNode("..", () => "cd .."));
+                if (listPath === "~/Games" && !isMobile) {
+                    elements.push(makeExecNode("fih", () => "fih"));
+                }
             }
             break;
         }
@@ -425,6 +444,29 @@ function processCommand(cmd, silent) {
 
         case "cat": {
             const target = args[0];
+
+            // Handle cat <executable> — resolve via executable paths
+            if (target && !isMobile && resolveExecutable(target)) {
+                catUsed = true;
+                [
+                    "fih - 3D ASCII Fish Tank",
+                    "",
+                    "Swim around a fish tank as a little ASCII fish.",
+                    "NPC fish wander, bubbles rise, seaweed sways.",
+                    "",
+                    "Controls:",
+                    "  Mouse         Look around",
+                    "  W/A/S/D       Swim",
+                    "  Space         Swim up",
+                    "  Left Shift    Swim down",
+                    "  Escape        Exit",
+                    "",
+                    "Usage: type 'fih' to play",
+                ].forEach(line => elements.push(makeLineNode(line || "\u00a0")));
+                elements.push(makeLineNode("\u00a0"));
+                break;
+            }
+
             let catPath = currentPath;
             if (target && target !== ".") {
                 const resolved = resolvePath(target);
@@ -502,8 +544,36 @@ function processCommand(cmd, silent) {
             break;
         }
 
+        case "sh": {
+            const target = args[0];
+            if (!target) {
+                elements.push(makeLineNode("sh: missing file operand"));
+                break;
+            }
+            const shExec = resolveExecutable(target);
+            if (shExec) {
+                if (!runExecutable(shExec)) {
+                    elements.push(makeLineNode(target + ": games are not available on mobile devices"));
+                    break;
+                }
+                return;
+            }
+            elements.push(makeLineNode(target + ": not executable"));
+            break;
+        }
+
         default:
-            if (sneakyCommands.includes(command)) {
+            if (command.startsWith("./")) {
+                const dotExec = resolveExecutable(command);
+                if (dotExec) {
+                    if (!runExecutable(dotExec)) {
+                        elements.push(makeLineNode(command + ": games are not available on mobile devices"));
+                        break;
+                    }
+                    return;
+                }
+                elements.push(makeLineNode(command + ": not executable"));
+            } else if (sneakyCommands.includes(command)) {
                 elements.push(makeLineNode(command + ": why are you trying to be sneaky?"));
             } else {
                 elements.push(makeLineNode(command + ": command not found"));
@@ -583,31 +653,135 @@ function navClear() {
     runCommand("clear");
 }
 
+// --- Game lifecycle ---
+function startFihGame() {
+    gameMode = true;
+    output.style.display = "none";
+    inputLine.style.display = "none";
+    document.getElementById("nav").style.display = "none";
+
+    const container = document.createElement("div");
+    container.id = "game-container";
+    container.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:100;";
+    document.body.appendChild(container);
+
+    FihGame.start(container, stopFihGame);
+}
+
+function stopFihGame() {
+    gameMode = false;
+    const container = document.getElementById("game-container");
+    if (container) container.parentNode.removeChild(container);
+
+    output.style.display = "";
+    inputLine.style.display = "flex";
+    document.getElementById("nav").style.display = "flex";
+
+    updatePrompt();
+    scrollToBottom();
+}
+
+var resizeTimer = null;
+window.addEventListener("resize", function () {
+    if (!gameMode) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+        FihGame.handleResize();
+    }, 150);
+});
+
+// --- Executable resolution ---
+function execsInCurrentDir() {
+    if (currentPath === "~") return [];
+    const dirName = currentPath.replace("~/", "");
+    return executableMap[dirName] || [];
+}
+
+function resolveExecutable(path) {
+    // Resolve a path like "fih", "./fih", "Games/fih", "~/Games/fih" to an exec name, or null
+    let clean = path;
+    if (clean.startsWith("./")) clean = clean.slice(2);
+    if (clean.startsWith("~/")) clean = clean.slice(2);
+    if (clean.startsWith("../")) clean = clean.slice(3);
+
+    // Try as dir/exec path (works from anywhere)
+    const slash = clean.indexOf("/");
+    if (slash !== -1) {
+        const dir = clean.slice(0, slash);
+        const file = clean.slice(slash + 1);
+        const dirMatch = Object.keys(executableMap).find(d => d.toLowerCase() === dir.toLowerCase());
+        if (dirMatch && executableMap[dirMatch].includes(file)) return file;
+        return null;
+    }
+
+    // Try as bare name in current directory
+    const execs = execsInCurrentDir();
+    if (execs.includes(clean)) return clean;
+    return null;
+}
+
+function runExecutable(name) {
+    if (name === "fih") {
+        if (isMobile) return false;
+        startFihGame();
+        return true;
+    }
+    return false;
+}
+
 // --- Tab completion ---
-const commandNames = ["help", "ls", "cd", "cat", "clear", "claude", "echo"];
-const argCommands = ["cd", "cat", "ls"];
+const commandNames = isMobile
+    ? ["help", "ls", "cd", "cat", "clear", "claude", "echo"]
+    : ["help", "ls", "cd", "cat", "clear", "claude", "echo", "sh"];
+const argCommands = ["cd", "cat", "ls", "sh"];
+
+function allExecPaths() {
+    // Returns executable paths relative to current directory
+    if (currentPath === "~") {
+        const paths = [];
+        Object.keys(executableMap).forEach(dir => {
+            executableMap[dir].forEach(e => paths.push(dir + "/" + e));
+        });
+        return paths;
+    } else {
+        return execsInCurrentDir().slice();
+    }
+}
 
 function getCompletionTargets(argPrefix) {
     let targets = [];
 
     if (isInSubpage()) {
         if (argPrefix.startsWith("../")) {
-            // Already typed ../ — complete with page names
-            Object.keys(pages).forEach(p => targets.push("../" + p));
+            Object.keys(pages).forEach(p => targets.push("../" + p + "/"));
         } else if (argPrefix.startsWith("~/")) {
-            // Absolute path — complete with page names
-            Object.keys(pages).forEach(p => targets.push("~/" + p));
+            Object.keys(pages).forEach(p => targets.push("~/" + p + "/"));
         } else {
-            // At subpage root — only .. and .
-            targets.push("..");
+            targets.push("../");
+            execsInCurrentDir().forEach(e => targets.push(e));
         }
     } else {
         if (argPrefix.startsWith("~/")) {
-            Object.keys(pages).forEach(p => targets.push("~/" + p));
+            Object.keys(pages).forEach(p => targets.push("~/" + p + "/"));
         } else {
-            Object.keys(pages).forEach(p => targets.push(p));
+            Object.keys(pages).forEach(p => targets.push(p + "/"));
         }
     }
+
+    // Nested path: e.g. "Games/f", "~/Games/f", "../Games/f"
+    let nested = argPrefix;
+    let nestedPrefix = "";
+    if (nested.startsWith("~/")) { nestedPrefix = "~/"; nested = nested.slice(2); }
+    else if (nested.startsWith("../")) { nestedPrefix = "../"; nested = nested.slice(3); }
+    const slash = nested.indexOf("/");
+    if (slash !== -1) {
+        const dir = nested.slice(0, slash);
+        const dirMatch = Object.keys(pages).find(pg => pg.toLowerCase() === dir.toLowerCase());
+        if (dirMatch) {
+            (executableMap[dirMatch] || []).forEach(e => targets.push(nestedPrefix + dirMatch + "/" + e));
+        }
+    }
+
     return targets;
 }
 
@@ -622,17 +796,46 @@ function getCompletions(input) {
     if (parts.length <= 1) {
         const p = parts[0].toLowerCase();
         if (!p) return [];
+
+        // Handle ./ completion — all items, with nested path support
+        if (p.startsWith("./")) {
+            const partial = p.slice(2);
+            let items = [];
+            const slash = partial.indexOf("/");
+            if (slash !== -1 && currentPath === "~") {
+                // Nested: e.g. "./Games/" — complete inside that dir
+                const dir = partial.slice(0, slash);
+                const dirMatch = Object.keys(pages).find(pg => pg.toLowerCase() === dir.toLowerCase());
+                if (dirMatch) {
+                    (executableMap[dirMatch] || []).forEach(e => items.push(dirMatch + "/" + e));
+                }
+            } else if (currentPath === "~") {
+                Object.keys(pages).forEach(pg => items.push(pg + "/"));
+            } else {
+                items.push("../");
+                execsInCurrentDir().forEach(e => items.push(e));
+            }
+            return items
+                .filter(e => e.toLowerCase().startsWith(partial) && e.toLowerCase() !== partial)
+                .map(e => prefix + "./" + e);
+        }
+
         return commandNames
             .filter(c => c.startsWith(p) && c !== p)
             .map(c => prefix + c);
     }
     const cmd = parts[0].toLowerCase();
     if (!argCommands.includes(cmd)) return [];
-    const argPrefix = parts.slice(1).join(" ");
-    const targets = getCompletionTargets(argPrefix);
+    let argPrefix = parts.slice(1).join(" ");
+    let argDotSlash = "";
+    if (argPrefix.startsWith("./")) {
+        argDotSlash = "./";
+        argPrefix = argPrefix.slice(2);
+    }
+    const targets = getCompletionTargets(argPrefix, cmd);
     return targets
         .filter(t => t.toLowerCase().startsWith(argPrefix.toLowerCase()) && t.toLowerCase() !== argPrefix.toLowerCase())
-        .map(t => prefix + cmd + " " + t);
+        .map(t => prefix + cmd + " " + argDotSlash + t);
 }
 
 // --- Keyboard ---
@@ -640,6 +843,7 @@ function getCompletions(input) {
 const isMac = /mac/i.test(navigator.userAgent);
 
 document.addEventListener("keydown", function (e) {
+    if (gameMode) return;
     if (animating) return;
 
     // Ctrl shortcuts (always) — use e.code for language/capslock independence
@@ -909,7 +1113,6 @@ terminal.addEventListener("click", function (e) {
 });
 
 // Boot sequence
-const isMobile = window.matchMedia("(pointer: coarse)").matches;
 const welcomeText = isMobile
     ? "Welcome! Tap on the screen to view current page content or navigate with the buttons ^"
     : "Welcome! Type 'help' for available commands, or click a button ^";
