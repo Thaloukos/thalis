@@ -122,6 +122,7 @@ function isInSubpage() {
 
 function resolvePath(target) {
     if (!target || target === "~" || target === "/") return "~";
+    if (target.length > 1 && target.endsWith("/")) target = target.slice(0, -1);
     if (target === ".") return currentPath;
 
     if (target === "..") {
