@@ -411,15 +411,21 @@ function processCommand(cmd, silent) {
 
             if (listPath === "~") {
                 pageNames.forEach(name => {
+                    const hasContents = !!(executableMap[name] && executableMap[name].length);
                     elements.push(makeClickableNode(name, () => {
-                        if (currentPath === "~/" + name) return "cat .";
-                        return cdCommandFor(name) + " && cat .";
+                        if (currentPath === "~/" + name) return hasContents ? "cat . && ls ." : "cat .";
+                        const nav = cdCommandFor(name) + " && cat .";
+                        return hasContents ? nav + " && ls ." : nav;
                     }));
                 });
             } else {
                 elements.push(makeClickableNode("..", () => "cd .."));
                 if (listPath === "~/Games" && !isMobile) {
-                    elements.push(makeExecNode("fih", () => "fih"));
+                    elements.push(makeExecNode("fih", () => {
+                        if (currentPath === "~/Games") return "sh fih";
+                        if (isInSubpage()) return "sh ../Games/fih";
+                        return "sh Games/fih";
+                    }));
                 }
             }
             break;

@@ -29,7 +29,7 @@
             hud: "#888888",
             hudHighlight: "#aaaaaa",
             bubble: "#6699cc",
-            seaweed: "#338844",
+            seaweed: "#1a5c2a",
             chest: "#aa8844",
             npc: ["#ff8855", "#55ccff", "#ffcc44", "#ff55aa"],
             depthClose: "#99aacc",
@@ -173,9 +173,18 @@
 
     function depthColor(z, baseColor) {
         if (!baseColor) baseColor = CFG.COLORS.tank;
-        if (z < 8) return baseColor;
-        if (z < 20) return CFG.COLORS.depthMid;
-        return CFG.COLORS.depthFar;
+        if (z < 10) return baseColor;
+        // Slight blueshift: blend base color toward deep blue based on distance
+        var t = Math.min(1, (z - 10) / 30); // 0 at z=10, 1 at z=40
+        var r = parseInt(baseColor.slice(1, 3), 16);
+        var g = parseInt(baseColor.slice(3, 5), 16);
+        var b = parseInt(baseColor.slice(5, 7), 16);
+        // Blend toward dark blue (0x33, 0x44, 0x66)
+        r = Math.round(r + (0x33 - r) * t * 0.5);
+        g = Math.round(g + (0x44 - g) * t * 0.5);
+        b = Math.round(b + (0x66 - b) * t * 0.3);
+        var hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        return hex;
     }
 
     // ========== DOM RENDERER ==========
