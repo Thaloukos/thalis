@@ -1,9 +1,132 @@
 <!doctype html>
 <html>
     <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>thalis</title>
         <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            html, body {
+                height: 100%;
+                background: black;
+                color: #d0d0d0;
+                font-family: monospace;
+                font-size: 16px;
+                line-height: 1.4;
+            }
+            #nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                display: flex;
+                gap: 1px;
+                background: #111;
+                border-bottom: 1px solid #444;
+                z-index: 10;
+            }
+            #nav button {
+                flex: 1;
+                background: black;
+                color: #d0d0d0;
+                border: none;
+                font-family: monospace;
+                font-size: 14px;
+                padding: 10px 0;
+                cursor: pointer;
+            }
+            #nav button:hover {
+                background: #1a1a2e;
+            }
+            #terminal {
+                padding: 20px;
+                padding-top: 52px;
+                min-height: 100%;
+                cursor: text;
+            }
+            #output .line {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            .dir {
+                color: #5555ff;
+                font-weight: bold;
+            }
+            .clickable {
+                cursor: pointer;
+                text-decoration: underline;
+            }
+            .clickable:hover {
+                color: #7777ff;
+            }
+            .line a {
+                color: #5599ff;
+                text-decoration: underline;
+            }
+            .line a:hover {
+                color: #77bbff;
+            }
+            #input-line {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .prompt {
+                white-space: pre;
+            }
+            .prompt-user {
+                color: #55ff55;
+                font-weight: bold;
+            }
+            .prompt-path {
+                color: #5555ff;
+                font-weight: bold;
+            }
+            .prompt-dollar {
+                color: #d0d0d0;
+            }
+            #input-before, #input-after {
+                white-space: pre;
+            }
+            .cursor {
+                background: #d0d0d0;
+                color: black;
+                animation: blink 1s step-end infinite;
+            }
+            .cursor:empty::after {
+                content: "\00a0";
+            }
+            @keyframes blink {
+                0%, 100% { background: #d0d0d0; color: black; }
+                50% { background: transparent; color: #d0d0d0; }
+            }
+            @media (max-width: 600px) {
+                #terminal {
+                    padding: 12px;
+                    padding-top: 52px;
+                }
+            }
+        </style>
     </head>
-    <body style="background:black;color:#00ff00;font-family:monospace;padding:40px;">
-        <h1>$ hello world</h1>
+    <body>
+        <div id="nav">
+            <button onclick="navHome()">Home</button>
+            <button onclick="navMenu()">Menu</button>
+            <button onclick="navClear()">Clear</button>
+        </div>
+        <div id="terminal">
+            <div id="output"></div>
+            <div id="input-line">
+                <span class="prompt" id="prompt"></span>
+                <span id="input-before"></span>
+                <span class="cursor"></span>
+                <span id="input-after"></span>
+            </div>
+        </div>
+        <script src="terminal.js"></script>
     </body>
 </html>
