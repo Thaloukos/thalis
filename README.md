@@ -13,6 +13,15 @@ A terminal-themed personal website. Navigate pages using familiar shell commands
 npx serve
 ```
 
+## OG image
+
+The link preview image is generated from `og-image.svg`. To regenerate the PNG:
+
+```
+brew install librsvg
+./generate-og-image.sh
+```
+
 ## License
 
 MIT
