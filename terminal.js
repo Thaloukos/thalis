@@ -403,6 +403,7 @@ function processCommand(cmd, silent) {
 
             if (catPath === "~") {
                 elements.push(makeLineNode(welcomeText.replace("Welcome! ", "").replace(/ \^$/, "")));
+                elements.push(makeLineNode("\u00a0"));
             } else {
                 const pageName = catPath.replace("~/", "");
                 if (pages[pageName]) {
