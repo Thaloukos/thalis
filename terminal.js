@@ -461,7 +461,7 @@ function processCommand(cmd, silent) {
                     "  Left Shift    Swim down",
                     "  Escape        Exit",
                     "",
-                    "Usage: type 'fih' to play",
+                    "Usage: run the 'fih' executable to play",
                 ].forEach(line => elements.push(makeLineNode(line || "\u00a0")));
                 elements.push(makeLineNode("\u00a0"));
                 break;
