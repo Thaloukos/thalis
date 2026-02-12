@@ -31,6 +31,7 @@
             bubble: "#6699cc",
             seaweed: "#1a5c2a",
             chest: "#aa8844",
+            crab: "#D97757",
             npc: ["#ff8855", "#55ccff", "#ffcc44", "#ff55aa"],
             depthClose: "#99aacc",
             depthMid: "#556688",
@@ -597,6 +598,38 @@
         }
     }
 
+    // ========== CRAB ==========
+    var crabPos = v3(-5, -CFG.TANK_H / 2 + 0.5, -4);
+
+    var crabSpriteBig = [
+        "    \u2590\u259B\u2588\u2588\u2588\u259C\u258C ",
+        "   \u259D\u259C\u2588\u2588\u2588\u2588\u2588\u259B\u2598",
+        "     \u2598\u2598 \u259D\u259D  "
+    ];
+
+    var crabSpriteMid = [
+        "\u2590\u2588\u2588\u2588\u258C",
+        " \u2598 \u259D "
+    ];
+
+    function drawCrab(buf) {
+        var p = projectToScreen(crabPos, buf);
+        if (!p || p.z < 0.5) return;
+        var color = depthColor(p.z, CFG.COLORS.crab);
+        if (p.z > 20) {
+            // Far: single char
+            setCell(buf, p.x, p.y, "\u2588", color);
+            return;
+        }
+        if (p.z > 12) {
+            // Mid: small crab
+            drawMultiLine(buf, p.x, p.y, crabSpriteMid, color);
+            return;
+        }
+        // Close: full claude creature
+        drawMultiLine(buf, p.x, p.y, crabSpriteBig, color);
+    }
+
     // ========== HUD ==========
     function drawHUD(buf) {
         var hint = "WASD:swim  Space/Shift:up/down  Mouse:look  ESC:exit";
@@ -672,6 +705,7 @@
         drawTank(buf);
         drawSeaweed(buf, gameTime);
         drawChest(buf);
+        drawCrab(buf);
         drawBubbles(buf);
         drawNPCs(buf);
         drawPlayer(buf);
@@ -687,7 +721,7 @@
         var style = window.getComputedStyle(containerEl);
         var fontSize = parseFloat(style.fontSize) || 16;
         var charW = fontSize * 0.6;
-        var charH = fontSize * 1.4;
+        var charH = fontSize * 1.0;
         var w = Math.floor(containerEl.clientWidth / charW);
         var h = Math.floor(containerEl.clientHeight / charH);
         return { w: Math.max(40, w), h: Math.max(12, h) };
@@ -698,7 +732,7 @@
         exitCallback = onExit || null;
 
         preEl = document.createElement("pre");
-        preEl.style.cssText = "margin:0;padding:0;font-family:monospace;font-size:16px;line-height:1.2;background:#000;color:#d0d0d0;overflow:hidden;width:100%;height:100%;cursor:crosshair;";
+        preEl.style.cssText = "margin:0;padding:0;font-family:monospace;font-size:16px;line-height:1;background:#000;color:#d0d0d0;overflow:hidden;width:100%;height:100%;cursor:crosshair;";
         containerEl.appendChild(preEl);
 
         var size = calcBufferSize();
