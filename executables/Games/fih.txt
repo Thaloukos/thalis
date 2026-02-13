@@ -1,0 +1,13 @@
+fih - 3D ASCII Fish Tank
+
+Swim around a fish tank as a little ASCII fish.
+NPC fish wander, bubbles rise, seaweed sways.
+
+Controls:
+  Mouse         Look around
+  W/A/S/D       Swim
+  Space         Swim up
+  Left Shift    Swim down
+  Escape        Exit
+
+Usage: run the 'fih' executable to play

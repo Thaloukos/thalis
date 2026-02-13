@@ -1,0 +1,43 @@
+{
+  "order": [
+    "About",
+    "Projects",
+    "Games",
+    "Contact"
+  ],
+  "mobileHidden": [
+    "Games"
+  ],
+  "tree": {
+    "About": {
+      "content": "pages/About.txt",
+      "children": {
+        "mathematics": {
+          "content": "pages/About/mathematics.txt"
+        },
+        "thalis": {
+          "content": "pages/About/thalis.txt"
+        }
+      },
+      "childOrder": [
+        "thalis",
+        "mathematics"
+      ]
+    },
+    "Contact": {
+      "content": "pages/Contact.txt"
+    },
+    "Games": {
+      "content": "pages/Games.txt",
+      "executables": {
+        "fih": {
+          "src": "/executables/Games/fih.js",
+          "help": "/executables/Games/fih.txt"
+        }
+      }
+    },
+    "Projects": {
+      "content": "pages/Projects.txt"
+    }
+  }
+}

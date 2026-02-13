@@ -74,6 +74,12 @@
             .clickable:hover {
                 color: #7777ff;
             }
+            .subpage {
+                color: #7799cc;
+            }
+            .subpage:hover {
+                color: #99bbee;
+            }
             .exec {
                 color: #55ff55;
                 font-weight: bold;
@@ -136,9 +142,9 @@
     </head>
     <body>
         <div id="nav">
-            <button onclick="navHome()">Home</button>
-            <button onclick="navMenu()">Menu</button>
-            <button onclick="navClear()">Clear</button>
+            <button id="nav-home">Home</button>
+            <button id="nav-menu">Menu</button>
+            <button id="nav-clear">Clear</button>
         </div>
         <div id="terminal">
             <div id="output"></div>
@@ -149,7 +155,6 @@
                 <span id="input-after"></span>
             </div>
         </div>
-        <script src="game/fih.js"></script>
-        <script src="terminal.js"></script>
+        <script type="module" src="terminal.js"></script>
     </body>
 </html>
