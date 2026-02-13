@@ -1,0 +1,51 @@
+{
+  "order": [
+    "About",
+    "Projects",
+    "Games",
+    "Contact"
+  ],
+  "mobileHidden": [
+    "Games"
+  ],
+  "tree": {
+    "About": {
+      "content": "pages/About.txt",
+      "children": {
+        "agentic_ai": {
+          "content": "pages/About/agentic_ai.txt"
+        },
+        "mathematics": {
+          "content": "pages/About/mathematics.txt"
+        },
+        "robotics": {
+          "content": "pages/About/robotics.txt"
+        },
+        "thalis": {
+          "content": "pages/About/thalis.txt"
+        }
+      },
+      "childOrder": [
+        "thalis",
+        "mathematics",
+        "robotics",
+        "agentic_ai"
+      ]
+    },
+    "Contact": {
+      "content": "pages/Contact.txt"
+    },
+    "Games": {
+      "content": "pages/Games.txt",
+      "executables": {
+        "fih": {
+          "src": "/executables/Games/fih.js",
+          "help": "/executables/Games/fih.txt"
+        }
+      }
+    },
+    "Projects": {
+      "content": "pages/Projects.txt"
+    }
+  }
+}

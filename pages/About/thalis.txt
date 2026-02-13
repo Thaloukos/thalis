@@ -1,0 +1,27 @@
+# Thalis Theodoulidis
+
+Software engineer based in Athens, Greece.
+
+Enjoyer of Mathematics and puzzles.
+
+## Background
+- [Mathematics](~/About/mathematics) | BSc @ UoE
+    * Linear Algebra
+    * Mathematical Modelling
+    * Operational Research
+- [Robotics](~/About/robotics) | Software Engineer
+    * Computer Vision
+    * Computational Geometry
+    * Sensor Fusion
+- [Agentic AI](~/About/agentic_ai) | Forward Deployed Engineer
+    * Enterprise AI agents
+    * Custom pipelines
+    * Good vibes
+
+## Languages
+- Python
+- C
+- C++
+- TypeScript
+
+[Get in touch](~/Contact)

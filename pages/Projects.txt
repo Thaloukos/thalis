@@ -11,4 +11,9 @@
  ,'`-./_____\,-'`.
      /       \
 
-Nothing to see here yet...
+Not much to see here yet, looking to populate this page with personal projects I can openly share.
+
+For now feel free to check out:
+- The [public repo](https://github.com/Thaloukos/thalis) for this webiste.
+- Sparse details on [Mathematics](~/About/mathematics) related stuff I have worked on.
+- Description for a couple of my favorite stuff from my [robotics](~/About/robotics) days.

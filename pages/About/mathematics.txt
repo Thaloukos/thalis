@@ -1,0 +1,21 @@
+# Mathematics
+
+Due to a series of interesting life decisions, I somehow ended up doing a Mathematics batchelor's degree in Edinburgh.
+
+Among all things I studied there, here are a few standouts:
+
+## Linear Algebra
+From intro to linear algebra, to numerical linear algebra, geometry and even PDEs (somehow), this was by far my favorite topic. It had the perfect balance of theory and actual problem solving. This gets a strong 9/10 recommendation.
+
+## Mathematical Modelling
+If there is one thing I enjoy more than Mathematics or Coding, it's their intersection. A favorite video of mine that served as a great inspiration for a project I did on the modelling of epidemics is [this](https://youtu.be/gxAaO2rsdIs) one.
+
+
+## Operational Research
+This is a topic I would love to have explored more; linear programming and constraint optimization was very fun. Not integer programming though, we do not talk about that.
+
+## Dissertation
+My dissertation was on non-linear solvers for optimization methods. It was just an exploration of gradient descent and BFGS, along with a set of benchmarks. We mainly explored how these two methods behave for ill-conditioned problems and/or problems with a lot of local minima. The latter method is not very well known, but it was super interesting, I recommend checking [it](https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm) out if you're interested.
+
+
+Maybe at some point I will populate my [projects](~/Projects) page with more info...
