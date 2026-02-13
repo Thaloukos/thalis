@@ -1,0 +1,23 @@
+# Robotics
+
+In robotics, I found this much desired intersection between Mathematics and coding. I worked at [Delian](https://delian.ai/) for two years, where I ended up owning a good portion of the perception stack for the [LAST](https://delian.ai/products/last). I got to work on various computer vision and computational geometry problems, some of my favorites include:
+
+## Ray Tracing
+- CPU only single threaded ray tracer on resource-restricted edge compute devices.
+- Custom memory-light acceleration data structures.
+- 97% decreased runtime compared to pre-made library for meshes up to 100x in size.
+- Custom modular tiles, ready to deploy anywhere.
+
+## Mission Planning
+- Built on top of the ray tracer.
+- Custom algorithms for occlusion and clustering.
+- Optimized path planning for scanning areas of interest.
+
+## Sensor Fusion
+- Integration of various different sensors.
+- Unified probabilistic model for all objects.
+- Asynchronous sources of truth.
+
+Most of my solutions were in pure C, but our framework was ROS2 with C++. I also got to build a lot of prototypes and custom simulation environemnts in Python.
+
+I think I will always have a soft spot for robotics, regardless of how annoying working with hardware can get.

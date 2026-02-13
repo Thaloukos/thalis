@@ -9,7 +9,7 @@ Enjoyer of Mathematics and puzzles.
     * Linear Algebra
     * Mathematical Modelling
     * Operational Research
-- Robotics | Software Engineer
+- [Robotics](~/About/robotics) | Software Engineer
     * Computer Vision
     * Computational Geometry
     * Sensor Fusion

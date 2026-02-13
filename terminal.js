@@ -172,8 +172,15 @@ function linkify(text) {
             parts.push(linkifySegment(text.slice(last, match.index)));
         }
         const label = escapeHTML(match[1]);
-        const path = escapeHTML(match[2].startsWith("~/") ? match[2] : "~/" + match[2]);
-        parts.push('<span class="page-link clickable dir" data-path="' + path + '">' + label + '</span>');
+        const target = match[2];
+        if (target.startsWith("http://") || target.startsWith("https://")) {
+            parts.push('<a href="' + escapeHTML(target) + '" target="_blank" rel="noopener">' + label + '</a>');
+        } else if (target.startsWith("mailto:")) {
+            parts.push('<a href="' + escapeHTML(target) + '" target="_blank">' + label + '</a>');
+        } else {
+            const path = escapeHTML(target.startsWith("~/") ? target : "~/" + target);
+            parts.push('<span class="page-link clickable dir" data-path="' + path + '">' + label + '</span>');
+        }
         last = match.index + match[0].length;
     }
     if (last < text.length) {
