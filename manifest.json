@@ -12,6 +12,9 @@
     "About": {
       "content": "pages/About.txt",
       "children": {
+        "agentic_ai": {
+          "content": "pages/About/agentic_ai.txt"
+        },
         "mathematics": {
           "content": "pages/About/mathematics.txt"
         },
@@ -25,7 +28,8 @@
       "childOrder": [
         "thalis",
         "mathematics",
-        "robotics"
+        "robotics",
+        "agentic_ai"
       ]
     },
     "Contact": {

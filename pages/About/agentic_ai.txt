@@ -1,0 +1,5 @@
+# Agentic AI
+
+Currently building AI agents for [Wonderƒul](https://www.wonderful.ai/) as a forward deployed engineer.
+
+Big 180° turn from robotics, but equally fun. Awesome team, and very interesting tailor-made solutions for each client. More info about our small-but-growing GR team [here](https://www.wonderful.ai/greece)!

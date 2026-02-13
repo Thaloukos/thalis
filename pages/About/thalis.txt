@@ -13,7 +13,7 @@ Enjoyer of Mathematics and puzzles.
     * Computer Vision
     * Computational Geometry
     * Sensor Fusion
-- Agentic AI | Forward Deployed Engineer
+- [Agentic AI](~/About/agentic_ai) | Forward Deployed Engineer
     * Enterprise AI agents
     * Custom pipelines
     * Good vibes
