@@ -1058,6 +1058,12 @@ function getCompletions(input) {
 const isMac = /mac/i.test(navigator.userAgent);
 
 document.addEventListener("keydown", function (e) {
+    // Ctrl+C stops executable
+    if (gameMode && e.ctrlKey && e.code === "KeyC") {
+        e.preventDefault();
+        stopExecutable();
+        return;
+    }
     if (gameMode) return;
 
     // Ctrl+C interrupts animation
