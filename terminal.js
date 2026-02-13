@@ -178,8 +178,22 @@ function linkify(text) {
         } else if (target.startsWith("mailto:")) {
             parts.push('<a href="' + escapeHTML(target) + '" target="_blank" title="external link">' + label + '</a>');
         } else {
-            const path = escapeHTML(target.startsWith("~/") ? target : "~/" + target);
-            parts.push('<span class="page-link clickable dir" data-path="' + path + '" title="go to">' + label + '</span>');
+            const path = target.startsWith("~/") ? target : "~/" + target;
+            const segs = pathSegments(path);
+            let cls = "page-link clickable dir";
+            let title = "go to";
+            if (segs.length > 1) {
+                const parentPath = "~/" + segs.slice(0, -1).join("/");
+                const parentNode = getNode(parentPath);
+                if (parentNode && parentNode.executables[segs[segs.length - 1]]) {
+                    cls = "page-link clickable exec";
+                    title = "run";
+                } else {
+                    cls = "page-link clickable subpage";
+                    title = "open";
+                }
+            }
+            parts.push('<span class="' + cls + '" data-path="' + escapeHTML(path) + '" title="' + title + '">' + label + '</span>');
         }
         last = match.index + match[0].length;
     }
