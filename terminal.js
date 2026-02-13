@@ -1350,8 +1350,8 @@ document.addEventListener("click", function (e) {
 terminal.addEventListener("click", function (e) {
     if (e.target.closest("#nav") || e.target.classList.contains("clickable") || e.target.tagName === "A" || e.target.closest(".page-link")) return;
     if (window.matchMedia("(pointer: coarse)").matches && !animating) {
-        const node = currentPath !== "~" ? getNode(currentPath) : null;
-        runCommand(nodeHasContents(node) ? "cat . && ls ." : "cat .");
+        const hasContents = currentPath === "~" || nodeHasContents(getNode(currentPath));
+        runCommand(hasContents ? "cat . && ls ." : "cat .");
         return;
     }
     window.focus();
