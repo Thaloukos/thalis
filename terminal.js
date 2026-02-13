@@ -145,11 +145,11 @@ function linkifySegment(text) {
         }
         const raw = match[0];
         if (match[2]) {
-            parts.push('<a href="mailto:' + escapeHTML(raw) + '" target="_blank">' + escapeHTML(raw) + '</a>');
+            parts.push('<a href="mailto:' + escapeHTML(raw) + '" target="_blank" title="external link">' + escapeHTML(raw) + '</a>');
         } else if (match[3]) {
-            parts.push('<a href="https://' + escapeHTML(raw) + '" target="_blank" rel="noopener">' + escapeHTML(raw) + '</a>');
+            parts.push('<a href="https://' + escapeHTML(raw) + '" target="_blank" rel="noopener" title="external link">' + escapeHTML(raw) + '</a>');
         } else {
-            parts.push('<a href="' + escapeHTML(raw) + '" target="_blank" rel="noopener">' + escapeHTML(raw) + '</a>');
+            parts.push('<a href="' + escapeHTML(raw) + '" target="_blank" rel="noopener" title="external link">' + escapeHTML(raw) + '</a>');
         }
         last = match.index + raw.length;
     }
@@ -174,12 +174,12 @@ function linkify(text) {
         const label = escapeHTML(match[1]);
         const target = match[2];
         if (target.startsWith("http://") || target.startsWith("https://")) {
-            parts.push('<a href="' + escapeHTML(target) + '" target="_blank" rel="noopener">' + label + '</a>');
+            parts.push('<a href="' + escapeHTML(target) + '" target="_blank" rel="noopener" title="external link">' + label + '</a>');
         } else if (target.startsWith("mailto:")) {
-            parts.push('<a href="' + escapeHTML(target) + '" target="_blank">' + label + '</a>');
+            parts.push('<a href="' + escapeHTML(target) + '" target="_blank" title="external link">' + label + '</a>');
         } else {
             const path = escapeHTML(target.startsWith("~/") ? target : "~/" + target);
-            parts.push('<span class="page-link clickable dir" data-path="' + path + '">' + label + '</span>');
+            parts.push('<span class="page-link clickable dir" data-path="' + path + '" title="go to">' + label + '</span>');
         }
         last = match.index + match[0].length;
     }
@@ -431,6 +431,7 @@ function makeLineNode(text) {
 function makeClickableNode(text, commandFn) {
     const div = document.createElement("div");
     div.className = "line clickable dir";
+    div.title = "go to page";
     div.addEventListener("click", function () {
         const cmd = typeof commandFn === "function" ? commandFn() : commandFn;
         runCommand(cmd);
@@ -447,6 +448,7 @@ function makeDirNode(text) {
 function makeSubpageNode(text, commandFn) {
     const div = document.createElement("div");
     div.className = "line clickable subpage";
+    div.title = "open";
     div.addEventListener("click", function () {
         const cmd = typeof commandFn === "function" ? commandFn() : commandFn;
         runCommand(cmd);
@@ -457,6 +459,7 @@ function makeSubpageNode(text, commandFn) {
 function makeExecNode(text, commandFn) {
     const div = document.createElement("div");
     div.className = "line clickable exec";
+    div.title = "run";
     div.addEventListener("click", function () {
         const cmd = typeof commandFn === "function" ? commandFn() : commandFn;
         runCommand(cmd);
@@ -582,7 +585,9 @@ function processCommand(cmd, silent) {
                 });
             } else {
                 const node = getNode(listPath);
-                elements.push(makeClickableNode("..", () => "cd .."));
+                const backNode = makeClickableNode("..", () => "cd ..");
+                backNode.node.title = "back";
+                elements.push(backNode);
                 if (node) {
                     // Show children as subpage content nodes (cat-only, not cd targets)
                     for (const childName of node.childOrder) {
@@ -734,15 +739,15 @@ function processCommand(cmd, silent) {
         }
 
         default:
-            if (command.startsWith("./")) {
-                const dotExec = resolveExecutable(command);
-                if (dotExec) {
+            if (command.startsWith("./") || command.startsWith("~/") || command.startsWith("../") || command.includes("/")) {
+                const pathExec = resolveExecutable(command);
+                if (pathExec) {
                     if (isMobile) {
                         elements.push(makeLineNode(command + ": executables are not available on mobile devices"));
                         break;
                     }
                     animating = true;
-                    startExecutable(dotExec);
+                    startExecutable(pathExec);
                     return;
                 }
                 elements.push(makeLineNode(command + ": not executable"));
@@ -1000,10 +1005,6 @@ function getCompletionTargets(argPrefix, cmd) {
         }
     }
 
-    // Add ".." if in a subpage and no prefix override
-    if (basePath === currentPath && currentPath !== "~" && !argPrefix.startsWith("~/") && !argPrefix.startsWith("../")) {
-        targets.push("../");
-    }
 
     return targets;
 }
@@ -1020,13 +1021,18 @@ function getCompletions(input) {
         const p = parts[0].toLowerCase();
         if (!p) return [];
 
-        // Handle ./ completion (use original case, not lowercased p)
-        if (p.startsWith("./")) {
-            const partial = parts[0].slice(2);
-            const targets = getCompletionTargets(partial);
+        // Handle path-based completion: ./ ~/ ../ or contains /
+        if (p.startsWith("./") || p.startsWith("~/") || p.startsWith("../") || p.includes("/")) {
+            let pathPrefix = "";
+            let argPrefix = parts[0];
+            if (p.startsWith("./")) {
+                pathPrefix = "./";
+                argPrefix = parts[0].slice(2);
+            }
+            const targets = getCompletionTargets(argPrefix);
             return targets
-                .filter(e => e.toLowerCase().startsWith(partial.toLowerCase()) && e.toLowerCase() !== partial.toLowerCase())
-                .map(e => prefix + "./" + e);
+                .filter(e => e.toLowerCase().startsWith(argPrefix.toLowerCase()) && e.toLowerCase() !== argPrefix.toLowerCase())
+                .map(e => prefix + pathPrefix + e);
         }
 
         return commandNames
