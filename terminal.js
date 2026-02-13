@@ -552,6 +552,7 @@ function processCommand(cmd, silent) {
                 "  ls [path]   List pages",
                 "  cd [path]   Navigate",
                 "  cat [path]  View content",
+                "  sh [path]   Run executable",
                 "  clear       Clear the terminal",
                 "  help        Show this help message"
             ].forEach(line => elements.push(makeLineNode(line)));
