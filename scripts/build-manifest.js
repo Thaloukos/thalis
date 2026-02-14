@@ -110,15 +110,16 @@ function buildManifest() {
     const execTree = scanExecutables(EXEC_DIR, null);
     attachExecutables(tree, execTree);
 
-    // Determine order: preserve existing manifest order, append new pages alphabetically
+    // Determine order from pages/.order file, append new pages alphabetically
     let order;
-    try {
-        const existing = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
-        const existingOrder = existing.order || [];
+    const orderFile = path.join(PAGES_DIR, ".order");
+    if (fs.existsSync(orderFile)) {
+        const lines = fs.readFileSync(orderFile, "utf-8").split("\n").map(l => l.trim().replace(/\.txt$/, "")).filter(Boolean);
         const allPages = Object.keys(tree);
-        const newPages = allPages.filter(p => !existingOrder.includes(p)).sort();
-        order = existingOrder.filter(p => allPages.includes(p)).concat(newPages);
-    } catch {
+        const ordered = lines.filter(l => allPages.includes(l));
+        const remaining = allPages.filter(p => !ordered.includes(p)).sort();
+        order = ordered.concat(remaining);
+    } else {
         order = Object.keys(tree).sort();
     }
 
