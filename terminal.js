@@ -1071,6 +1071,19 @@ function getCompletions(input) {
 // --- Keyboard ---
 const isMac = /mac/i.test(navigator.userAgent);
 
+document.addEventListener("paste", function (e) {
+    if (gameMode || animating) return;
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text");
+    if (!text) return;
+    // Take only the first line, ignore newlines
+    const line = text.split(/[\r\n]/)[0];
+    inputBuffer = inputBuffer.slice(0, cursorPos) + line + inputBuffer.slice(cursorPos);
+    cursorPos += line.length;
+    removeHint();
+    renderInput();
+});
+
 document.addEventListener("keydown", function (e) {
     // Ctrl+C stops executable
     if (gameMode && e.ctrlKey && e.code === "KeyC") {
