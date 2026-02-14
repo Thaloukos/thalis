@@ -34,7 +34,7 @@ function scanPages(dir, prefix) {
             // Read .order file if present
             const orderFile = path.join(childDir, ".order");
             if (fs.existsSync(orderFile)) {
-                const lines = fs.readFileSync(orderFile, "utf-8").split("\n").map(l => l.trim()).filter(Boolean);
+                const lines = fs.readFileSync(orderFile, "utf-8").split("\n").map(l => l.trim().replace(/\.txt$/, "")).filter(Boolean);
                 const allChildren = Object.keys(children);
                 const ordered = lines.filter(l => allChildren.includes(l));
                 const remaining = allChildren.filter(c => !ordered.includes(c)).sort();

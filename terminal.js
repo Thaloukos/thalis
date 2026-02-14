@@ -573,7 +573,8 @@ function processCommand(cmd, silent) {
             break;
 
         case "ls": {
-            const target = args[0];
+            const showAll = args.includes("-a");
+            const target = args.find(a => !a.startsWith("-"));
             let listPath = currentPath;
             if (target) {
                 const resolved = resolvePath(target);
@@ -590,6 +591,7 @@ function processCommand(cmd, silent) {
 
             if (listPath === "~") {
                 pageNames.forEach(name => {
+                    if (!showAll && name.startsWith(".")) return;
                     const node = tree[name];
                     const hasContents = nodeHasContents(node);
                     elements.push(makeClickableNode(name, () => {
@@ -606,6 +608,7 @@ function processCommand(cmd, silent) {
                 if (node) {
                     // Show children as subpage content nodes (cat-only, not cd targets)
                     for (const childName of node.childOrder) {
+                        if (!showAll && childName.startsWith(".")) continue;
                         elements.push(makeSubpageNode(childName, () => {
                             return "cat " + childName;
                         }));
@@ -613,6 +616,7 @@ function processCommand(cmd, silent) {
                     // Show executables
                     if (!isMobile) {
                         for (const execName of Object.keys(node.executables)) {
+                            if (!showAll && execName.startsWith(".")) continue;
                             elements.push(makeExecNode(execName, () => {
                                 if (currentPath === listPath) return "sh " + execName;
                                 return "sh " + listPath.slice(2) + "/" + execName;
@@ -831,6 +835,7 @@ function simulateCommand(cmd) {
 
 // --- Nav buttons ---
 function runCommand(cmd) {
+    terminal.querySelectorAll(".tab-completion").forEach(el => el.remove());
     simulateCommand(cmd);
 }
 
@@ -997,17 +1002,23 @@ function getCompletionTargets(argPrefix, cmd) {
     }
 
     const baseDepth = pathSegments(basePath).length;
+    // Determine the partial name being typed (after last /)
+    const lastSlash = argPrefix.lastIndexOf("/");
+    const partial = lastSlash !== -1 ? argPrefix.slice(lastSlash + 1) : argPrefix;
+    const showHidden = partial.startsWith(".");
 
     // At home (depth 0): children are top-level pages (directories), show as dir/
     // At depth 1+: children are subpage content, only shown for cat/ls (not cd)
     if (baseDepth === 0) {
         const children = getNodeChildren(basePath);
         for (const child of children) {
+            if (!showHidden && child.startsWith(".")) continue;
             targets.push(pathPrefix + child + "/");
         }
     } else if (!isDirOnly) {
         const children = getNodeChildren(basePath);
         for (const child of children) {
+            if (!showHidden && child.startsWith(".")) continue;
             targets.push(pathPrefix + child);
         }
     }
@@ -1016,6 +1027,7 @@ function getCompletionTargets(argPrefix, cmd) {
     if (!isMobile && !isDirOnly) {
         const execs = getNodeExecs(basePath);
         for (const exec of execs) {
+            if (!showHidden && exec.startsWith(".")) continue;
             targets.push(pathPrefix + exec);
         }
     }
@@ -1056,7 +1068,11 @@ function getCompletions(input) {
     }
     const cmd = parts[0].toLowerCase();
     if (!argCommands.includes(cmd)) return [];
-    let argPrefix = parts.slice(1).join(" ");
+    const argParts = parts.slice(1);
+    const flags = argParts.filter(a => a.startsWith("-"));
+    const nonFlags = argParts.filter(a => !a.startsWith("-"));
+    const flagStr = flags.length ? flags.join(" ") + " " : "";
+    let argPrefix = nonFlags.join(" ");
     let argDotSlash = "";
     if (argPrefix.startsWith("./")) {
         argDotSlash = "./";
@@ -1065,7 +1081,7 @@ function getCompletions(input) {
     const targets = getCompletionTargets(argPrefix, cmd);
     return targets
         .filter(t => t.toLowerCase().startsWith(argPrefix.toLowerCase()) && t.toLowerCase() !== argPrefix.toLowerCase())
-        .map(t => prefix + cmd + " " + argDotSlash + t);
+        .map(t => prefix + cmd + " " + flagStr + argDotSlash + t);
 }
 
 // --- Keyboard ---
@@ -1135,6 +1151,7 @@ document.addEventListener("keydown", function (e) {
         }
         if (e.code === "KeyC") {
             e.preventDefault();
+            terminal.querySelectorAll(".tab-completion").forEach(el => el.remove());
             addPromptLine(inputBuffer + "^C");
             clearInput();
             updatePrompt();
@@ -1143,6 +1160,7 @@ document.addEventListener("keydown", function (e) {
         }
         if (e.code === "KeyU") {
             e.preventDefault();
+            terminal.querySelectorAll(".tab-completion").forEach(el => el.remove());
             inputBuffer = inputBuffer.slice(cursorPos);
             cursorPos = 0;
             renderInput();
@@ -1245,10 +1263,12 @@ document.addEventListener("keydown", function (e) {
             if (lastTabInput === inputBuffer) {
                 terminal.querySelectorAll(".tab-completion").forEach(el => el.remove());
                 completions.forEach(c => {
-                    const parts = c.split(/\s+/);
+                    const arg = c.split(/\s+/).pop();
+                    const lastSlash = arg.lastIndexOf("/", arg.length - 2);
+                    const display = lastSlash !== -1 ? arg.slice(lastSlash + 1) : arg;
                     const div = document.createElement("div");
                     div.className = "line tab-completion";
-                    div.textContent = parts.length > 1 ? parts.slice(1).join(" ") : c;
+                    div.textContent = display;
                     terminal.appendChild(div);
                 });
                 scrollToBottom();
