@@ -49,7 +49,15 @@
       }
     },
     "Projects": {
-      "content": "pages/Projects.txt"
+      "content": "pages/Projects.txt",
+      "children": {
+        ".hidden": {
+          "content": "pages/Projects/.hidden.txt"
+        }
+      },
+      "childOrder": [
+        ".hidden"
+      ]
     }
   }
 }

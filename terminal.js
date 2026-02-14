@@ -526,8 +526,8 @@ function setInput(text) {
 // --- Helper: check if a node has visible contents (children or executables) ---
 function nodeHasContents(node) {
     if (!node) return false;
-    if (Object.keys(node.children).length > 0) return true;
-    if (!isMobile && Object.keys(node.executables).length > 0) return true;
+    if (Object.keys(node.children).some(c => !c.startsWith("."))) return true;
+    if (!isMobile && Object.keys(node.executables).some(e => !e.startsWith("."))) return true;
     return false;
 }
 
