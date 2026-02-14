@@ -7,6 +7,7 @@ A terminal-themed personal website. Navigate pages using familiar shell commands
 - Vanilla HTML, CSS, JavaScript (ES modules)
 - No frameworks or dependencies
 - Manifest-driven filesystem (`manifest.json` auto-generated from directory structure)
+- Terminal emulator split into [focused modules](terminal/)
 
 ## Running locally
 

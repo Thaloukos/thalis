@@ -1,5 +1,6 @@
 {
   "order": [
+    ".todo",
     "About",
     "Projects",
     "Games",
@@ -9,9 +10,18 @@
     "Games"
   ],
   "tree": {
+    ".todo": {
+      "content": "pages/.todo.txt"
+    },
     "About": {
       "content": "pages/About.txt",
       "children": {
+        ".hidden": {
+          "content": "pages/About/.hidden.txt"
+        },
+        ".stats": {
+          "content": "pages/About/.stats.txt"
+        },
         "agentic_ai": {
           "content": "pages/About/agentic_ai.txt"
         },
@@ -26,6 +36,8 @@
         }
       },
       "childOrder": [
+        ".hidden",
+        ".stats",
         "thalis",
         "mathematics",
         "robotics",
@@ -45,7 +57,15 @@
       }
     },
     "Projects": {
-      "content": "pages/Projects.txt"
+      "content": "pages/Projects.txt",
+      "children": {
+        ".hidden": {
+          "content": "pages/Projects/.hidden.txt"
+        }
+      },
+      "childOrder": [
+        ".hidden"
+      ]
     }
   }
 }
