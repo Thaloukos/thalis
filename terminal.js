@@ -314,9 +314,32 @@ function resolvePath(target) {
     return resolveFrom(currentPath, target);
 }
 
+function relativeCd(targetDir) {
+    if (currentPath === targetDir) return "";
+    if (targetDir === "~") return "cd ~";
+    if (currentPath === "~") {
+        // From home, just use the top-level name
+        return "cd " + pathSegments(targetDir)[0];
+    }
+    const curSegs = pathSegments(currentPath);
+    const tarSegs = pathSegments(targetDir);
+    if (curSegs[0] === tarSegs[0]) {
+        // Same top-level page — use ../ to go up then down
+        let up = curSegs.length;
+        let rel = "../".repeat(up) + tarSegs.join("/");
+        return "cd " + rel;
+    }
+    if (curSegs.length === 1 && tarSegs.length === 1) {
+        // Sibling top-level pages
+        return "cd ../" + tarSegs[0];
+    }
+    // Different branches — ../ up to home then down
+    let up = curSegs.length;
+    return "cd " + "../".repeat(up) + tarSegs.join("/");
+}
+
 function cdCommandFor(pageName) {
-    if (currentPath === "~") return "cd " + pageName;
-    return "cd ~/" + pageName;
+    return relativeCd("~/" + pageName);
 }
 
 // --- Prompt ---
@@ -619,7 +642,8 @@ function processCommand(cmd, silent) {
                             if (!showAll && execName.startsWith(".")) continue;
                             elements.push(makeExecNode(execName, () => {
                                 if (currentPath === listPath) return "sh " + execName;
-                                return "sh " + listPath.slice(2) + "/" + execName;
+                                const nav = relativeCd(listPath);
+                                return nav ? nav + " && sh " + execName : "sh " + execName;
                             }));
                         }
                     }
@@ -1387,19 +1411,7 @@ document.addEventListener("click", function (e) {
     const needDir = targetChild ? targetParent : resolved;
 
     // Build shortest relative cd command
-    let nav = "";
-    if (currentPath === needDir) {
-        // Already there
-    } else if (currentPath === "~") {
-        nav = "cd " + targetPage;
-    } else if (needDir === "~") {
-        nav = "cd ~";
-    } else if (parentOf(currentPath) === parentOf(needDir)) {
-        // Sibling pages
-        nav = "cd ../" + pathSegments(needDir).pop();
-    } else {
-        nav = "cd " + needDir;
-    }
+    const nav = relativeCd(needDir);
 
     // Build cat command
     let cat;
