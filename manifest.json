@@ -19,6 +19,9 @@
         ".hidden": {
           "content": "pages/About/.hidden.txt"
         },
+        ".stats": {
+          "content": "pages/About/.stats.txt"
+        },
         "agentic_ai": {
           "content": "pages/About/agentic_ai.txt"
         },
@@ -34,6 +37,7 @@
       },
       "childOrder": [
         ".hidden",
+        ".stats",
         "thalis",
         "mathematics",
         "robotics",

@@ -133,12 +133,54 @@ function buildManifest() {
     return { order, mobileHidden, tree };
 }
 
+function validateOrderFiles() {
+    const errors = [];
+    function checkDir(dir, label) {
+        const orderFile = path.join(dir, ".order");
+        if (!fs.existsSync(orderFile)) return;
+
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        const txtNames = entries
+            .filter(e => e.isFile() && e.name.endsWith(".txt"))
+            .map(e => e.name.replace(/\.txt$/, ""));
+        const orderLines = fs.readFileSync(orderFile, "utf-8")
+            .split("\n").map(l => l.trim().replace(/\.txt$/, "")).filter(Boolean);
+
+        for (const name of txtNames) {
+            if (!orderLines.includes(name)) {
+                errors.push(label + "/.order is missing: " + name);
+            }
+        }
+        const dirNames = entries.filter(e => e.isDirectory()).map(e => e.name);
+        const valid = new Set([...txtNames, ...dirNames]);
+        for (const entry of orderLines) {
+            if (!valid.has(entry)) {
+                errors.push(label + "/.order has stale entry: " + entry);
+            }
+        }
+    }
+    checkDir(PAGES_DIR, "pages");
+    const subdirs = fs.readdirSync(PAGES_DIR, { withFileTypes: true }).filter(e => e.isDirectory());
+    for (const d of subdirs) {
+        checkDir(path.join(PAGES_DIR, d.name), "pages/" + d.name);
+    }
+    return errors;
+}
+
 function main() {
     const checkMode = process.argv.includes("--check");
     const manifest = buildManifest();
     const json = JSON.stringify(manifest, null, 2) + "\n";
 
     if (checkMode) {
+        let failed = false;
+
+        const orderErrors = validateOrderFiles();
+        if (orderErrors.length > 0) {
+            orderErrors.forEach(e => console.error(e));
+            failed = true;
+        }
+
         let existing = "";
         try {
             existing = fs.readFileSync(MANIFEST_PATH, "utf-8");
@@ -148,9 +190,11 @@ function main() {
         }
         if (existing !== json) {
             console.error("manifest.json is out of date. Run: node scripts/build-manifest.js");
-            process.exit(1);
+            failed = true;
         }
-        console.log("manifest.json is up to date.");
+
+        if (failed) process.exit(1);
+        console.log("All checks passed.");
         process.exit(0);
     }
 
