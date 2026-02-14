@@ -102,7 +102,10 @@ export function processCommand(cmd, silent) {
                 });
             } else {
                 const node = getNode(listPath);
-                const backNode = makeClickableNode("..", () => "cd ..");
+                const backNode = makeClickableNode("..", () => {
+                    if (state.currentPath === listPath) return "cd ..";
+                    return relativeCd("~") || "cd ~";
+                });
                 backNode.node.title = "back";
                 elements.push(backNode);
                 if (node) {
@@ -110,7 +113,9 @@ export function processCommand(cmd, silent) {
                     for (const childName of node.childOrder) {
                         if (!showAll && childName.startsWith(".")) continue;
                         elements.push(makeSubpageNode(childName, () => {
-                            return "cat " + childName;
+                            if (state.currentPath === listPath) return "cat " + childName;
+                            const nav = relativeCd(listPath);
+                            return nav ? nav + " && cat " + childName : "cat " + childName;
                         }));
                     }
                     // Show executables
