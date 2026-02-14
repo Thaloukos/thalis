@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { isMobile, tree } from './manifest.js';
-import { getNode, parentOf, pathSegments, resolveFrom } from './path.js';
+import { getNode, parentOf, pathSegments, resolveFrom, isTopLevelDir } from './path.js';
 
 // --- Tab completion ---
 const commandNames = isMobile
@@ -77,13 +77,17 @@ function getCompletionTargets(argPrefix, cmd) {
     const partial = lastSlash !== -1 ? argPrefix.slice(lastSlash + 1) : argPrefix;
     const showHidden = partial.startsWith(".");
 
-    // At home (depth 0): children are top-level pages (directories), show as dir/
+    // At home (depth 0): directories get dir/ suffix, files shown for cat/sh only
     // At depth 1+: children are subpage content, only shown for cat/ls (not cd)
     if (baseDepth === 0) {
         const children = getNodeChildren(basePath);
         for (const child of children) {
             if (!showHidden && child.startsWith(".")) continue;
-            targets.push(pathPrefix + child + "/");
+            if (isTopLevelDir(child)) {
+                targets.push(pathPrefix + child + "/");
+            } else if (!isDirOnly) {
+                targets.push(pathPrefix + child);
+            }
         }
     } else if (!isDirOnly) {
         const children = getNodeChildren(basePath);

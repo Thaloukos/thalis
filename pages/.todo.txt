@@ -1,0 +1,6 @@
+# Upcoming Additions:
+- Ctrl+R recursive search
+- More games:
+    * Snake?
+    * TicTacToe ("AI" opponent)
+- More easter eggs & hidden files

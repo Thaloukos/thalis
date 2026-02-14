@@ -1,6 +1,6 @@
 import { state, dom } from './state.js';
 import { isMobile, pageNames, tree } from './manifest.js';
-import { resolvePath, pathSegments, getNode, cdCommandFor, relativeCd } from './path.js';
+import { resolvePath, pathSegments, getNode, cdCommandFor, relativeCd, isTopLevelDir, isDirectory } from './path.js';
 import { addPromptLine, makeLineNode, makeClickableNode, makeSubpageNode, makeExecNode, makeColoredNode, animateOutput, scrollToBottom } from './output.js';
 import { updatePrompt, nodeHasContents } from './input.js';
 import { resolveExecutable, startExecutable } from './executables.js';
@@ -75,7 +75,7 @@ export function processCommand(cmd, silent) {
                     elements.push(makeLineNode("ls: cannot access '" + target + "': No such directory"));
                     break;
                 }
-                if (pathSegments(resolved).length > 1) {
+                if (!isDirectory(resolved)) {
                     elements.push(makeLineNode("ls: cannot access '" + target + "': Not a directory"));
                     break;
                 }
@@ -85,13 +85,20 @@ export function processCommand(cmd, silent) {
             if (listPath === "~") {
                 pageNames.forEach(name => {
                     if (!showAll && name.startsWith(".")) return;
-                    const node = tree[name];
-                    const hasContents = nodeHasContents(node);
-                    elements.push(makeClickableNode(name, () => {
-                        if (state.currentPath === "~/" + name) return hasContents ? "cat . && ls ." : "cat .";
-                        const nav = cdCommandFor(name) + " && cat .";
-                        return hasContents ? nav + " && ls ." : nav;
-                    }));
+                    if (isTopLevelDir(name)) {
+                        const node = tree[name];
+                        const hasContents = nodeHasContents(node);
+                        elements.push(makeClickableNode(name, () => {
+                            if (state.currentPath === "~/" + name) return hasContents ? "cat . && ls ." : "cat .";
+                            const nav = cdCommandFor(name) + " && cat .";
+                            return hasContents ? nav + " && ls ." : nav;
+                        }));
+                    } else {
+                        elements.push(makeSubpageNode(name, () => {
+                            if (state.currentPath === "~") return "cat " + name;
+                            return relativeCd("~") + " && cat " + name;
+                        }));
+                    }
                 });
             } else {
                 const node = getNode(listPath);
@@ -132,7 +139,7 @@ export function processCommand(cmd, silent) {
             const resolved = resolvePath(target);
             if (resolved === null) {
                 elements.push(makeLineNode("cd: no such directory: " + target));
-            } else if (pathSegments(resolved).length > 1) {
+            } else if (!isDirectory(resolved)) {
                 elements.push(makeLineNode("cd: not a directory: " + target));
             } else {
                 if (resolved !== state.currentPath) state.catUsed = false;

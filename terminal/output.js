@@ -1,5 +1,5 @@
 import { state, dom, callbacks } from './state.js';
-import { pathSegments, getNode } from './path.js';
+import { pathSegments, getNode, isTopLevelDir } from './path.js';
 import { getPromptHTML, updatePrompt } from './input.js';
 
 // --- Link detection ---
@@ -70,6 +70,9 @@ export function linkify(text) {
                     cls = "page-link clickable subpage";
                     title = "open";
                 }
+            } else if (segs.length === 1 && !isTopLevelDir(segs[0])) {
+                cls = "page-link clickable subpage";
+                title = "open";
             }
             parts.push('<span class="' + cls + '" data-path="' + escapeHTML(path) + '" title="' + title + '">' + label + '</span>');
         }
@@ -204,7 +207,7 @@ export function makeLineNode(text) {
 export function makeClickableNode(text, commandFn) {
     const div = document.createElement("div");
     div.className = "line clickable dir";
-    div.title = "go to page";
+    div.title = "go to";
     div.addEventListener("click", function () {
         const cmd = typeof commandFn === "function" ? commandFn() : commandFn;
         callbacks.runCommand(cmd);

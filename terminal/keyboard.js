@@ -1,5 +1,5 @@
 import { state, dom, callbacks } from './state.js';
-import { resolvePath, pathSegments, relativeCd, getNode } from './path.js';
+import { resolvePath, pathSegments, relativeCd, getNode, isTopLevelDir } from './path.js';
 import { renderInput, clearInput, setInput, wordLeft, wordRight, removeHint, showHint, updatePrompt, nodeHasContents } from './input.js';
 import { addLine, addPromptLine, scrollToBottom, skipAnimation, enqueueOrRun } from './output.js';
 import { processCommand, welcomeText } from './commands.js';
@@ -368,21 +368,24 @@ export function boot() {
         const targetParent = segs.length > 1 ? "~/" + segs.slice(0, -1).join("/") : "~";
         const targetChild = segs.length > 1 ? segs[segs.length - 1] : null;
 
-        // Determine the directory we need to be in
-        const needDir = targetChild ? targetParent : resolved;
-
-        // Build shortest relative cd command
-        const nav = relativeCd(needDir);
-
-        // Build cat command
-        let cat;
+        let needDir, cat;
         if (targetChild) {
+            // Subpage: cd to parent, cat child
+            needDir = targetParent;
             cat = "cat " + targetChild;
+        } else if (!isTopLevelDir(segs[0])) {
+            // Top-level file: cd to home, cat file
+            needDir = "~";
+            cat = "cat " + segs[0];
         } else {
+            // Top-level directory: cd into it, cat .
+            needDir = resolved;
             const node = getNode(resolved);
             const hasContents = nodeHasContents(node);
             cat = "cat ." + (hasContents ? " && ls ." : "");
         }
+
+        const nav = relativeCd(needDir);
 
         runCommand(nav ? nav + " && " + cat : cat);
     });

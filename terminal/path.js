@@ -103,3 +103,15 @@ export function relativeCd(targetDir) {
 export function cdCommandFor(pageName) {
     return relativeCd("~/" + pageName);
 }
+
+export function isTopLevelDir(name) {
+    const base = name.startsWith(".") ? name.slice(1) : name;
+    return base.length > 0 && base[0] >= 'A' && base[0] <= 'Z';
+}
+
+export function isDirectory(p) {
+    if (p === "~") return true;
+    const segs = pathSegments(p);
+    if (segs.length !== 1) return false;
+    return isTopLevelDir(segs[0]);
+}

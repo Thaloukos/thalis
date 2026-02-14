@@ -1,5 +1,6 @@
 {
   "order": [
+    ".todo",
     "About",
     "Projects",
     "Games",
@@ -9,6 +10,9 @@
     "Games"
   ],
   "tree": {
+    ".todo": {
+      "content": "pages/.todo.txt"
+    },
     "About": {
       "content": "pages/About.txt",
       "children": {
