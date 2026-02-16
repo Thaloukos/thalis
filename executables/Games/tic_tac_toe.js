@@ -193,8 +193,8 @@ function drawBoard() {
             } else if (mark === "O") {
                 var color = isWinCell ? CFG.COLORS.lose : CFG.COLORS.computerO;
                 drawString(buf, cellX + 3, cellY + 1, "O", color);
-            } else {
-                // Hint number
+            } else if (!isMobile) {
+                // Hint number (desktop only — numpad layout)
                 drawString(buf, cellX + 3, cellY + 1, String(hintNumbers[idx]), CFG.COLORS.hint);
             }
         }
@@ -427,7 +427,7 @@ var scores = { player: 0, computer: 0, draws: 0 };
 function drawScoreboard() {
     var line = "X: " + scores.player + "  O: " + scores.computer + "  Draw: " + scores.draws;
     var cx = Math.floor(buf.w / 2);
-    var y = 0;
+    var y = 1;
     drawString(buf, cx - Math.floor(line.length / 2), y, line, CFG.COLORS.text);
 
     // Color the individual parts
@@ -892,7 +892,7 @@ function tick(timestamp) {
     }
 
     // HUD
-    var hudY = buf.h - 1;
+    var hudY = buf.h - 2;
     exitBtnX = -1;
     exitBtnY = -1;
     exitBtnLen = 0;
@@ -951,7 +951,7 @@ export function start(container, onExit) {
     exitCallback = onExit || null;
 
     preEl = document.createElement("pre");
-    preEl.style.cssText = "margin:0;padding:0;font-family:monospace;font-size:16px;line-height:1;background:#000;color:#d0d0d0;overflow:hidden;width:100%;height:100%;cursor:pointer;";
+    preEl.style.cssText = "margin:0;padding:0;font-family:monospace;font-size:16px;line-height:1;background:#000;color:#d0d0d0;overflow:hidden;width:100%;height:100%;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;";
     containerEl.appendChild(preEl);
 
     var size = calcBufferSize();
