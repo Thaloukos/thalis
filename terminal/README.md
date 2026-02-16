@@ -14,7 +14,7 @@ Terminal emulator modules. `terminal.js` at the project root is the entry point 
 | `commands.js` | `processCommand` switch statement, `sneakyCommands`, `welcomeText` |
 | `executables.js` | `resolveExecutable`, `startExecutable`, `stopExecutable`, resize handler |
 | `completion.js` | Tab completion: command names, path-aware argument completion |
-| `keyboard.js` | Keydown/paste/click handlers, `simulateCommand`, `runCommand`, `boot()` |
+| `keyboard.js` | Keydown/paste/click handlers, reverse history search, `simulateCommand`, `runCommand`, `boot()` |
 
 ## Dependency graph
 
