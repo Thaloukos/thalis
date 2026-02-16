@@ -53,6 +53,10 @@
         "fih": {
           "src": "/executables/Games/fih.js",
           "help": "/executables/Games/fih.txt"
+        },
+        "ttt": {
+          "src": "/executables/Games/ttt.js",
+          "help": "/executables/Games/ttt.txt"
         }
       }
     },
