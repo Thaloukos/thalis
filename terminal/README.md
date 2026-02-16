@@ -10,7 +10,7 @@ Terminal emulator modules. `terminal.js` at the project root is the entry point 
 | `manifest.js` | Fetches `manifest.json`, builds the filesystem tree, fetches all page content |
 | `path.js` | Path resolution: `getNode`, `resolvePath`, `resolveFrom`, `relativeCd`, etc. |
 | `input.js` | Input buffer rendering, word navigation, prompt HTML, hint system |
-| `output.js` | Node builders, character-by-character animation, animation queue, linkification |
+| `output.js` | Node builders, character-by-character animation, animation queue, linkification, `resolveConditional` |
 | `commands.js` | `processCommand` switch statement, `sneakyCommands`, `welcomeText` |
 | `executables.js` | `resolveExecutable`, `startExecutable`, `stopExecutable`, resize handler |
 | `completion.js` | Tab completion: command names, path-aware argument completion |
@@ -25,7 +25,7 @@ state.js, manifest.js          (no internal imports)
         ↓
      input.js                  (imports state, manifest, path)
         ↓
-    output.js                  (imports state, path, input)
+    output.js                  (imports state, manifest, path, input)
         ↓
   executables.js               (imports state, manifest, path, output, input)
         ↓
