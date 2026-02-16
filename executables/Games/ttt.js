@@ -232,12 +232,12 @@ var coinFrames = [
     ],
     // Edge
     [
-        "      |      ",
-        "      |      ",
-        "      |      ",
-        "      |      ",
-        "      |      ",
-        "      |      "
+        "      ||      ",
+        "      ||      ",
+        "      ||      ",
+        "      ||      ",
+        "      ||      ",
+        "      ||      "
     ],
     // Narrow TAILS
     [
@@ -286,12 +286,12 @@ var coinFrames = [
     ],
     // Edge (back)
     [
-        "      |      ",
-        "      |      ",
-        "      |      ",
-        "      |      ",
-        "      |      ",
-        "      |      "
+        "      ||      ",
+        "      ||      ",
+        "      ||      ",
+        "      ||      ",
+        "      ||      ",
+        "      ||      "
     ],
     // Narrow HEADS (back)
     [
@@ -375,9 +375,10 @@ function drawCoinFlip() {
     var lines;
     if (coinPhase === "spinning") {
         lines = coinFrames[coinFrameIdx];
-    } else {
+    } else if (coinPhase === "result") {
         lines = coinResultFrames[coinResult];
     }
+    if (!lines) return;
 
     var cx = Math.floor(buf.w / 2);
     var cy = Math.floor(buf.h / 2) - 3;
@@ -423,11 +424,230 @@ function drawScoreboard() {
 // Receives the board array ("" = empty, "X" = player, "O" = computer).
 // Must return the index (0-8) of an empty cell to play.
 // ============================================================
+function checkWinOn(b, mark) {
+    for (var i = 0; i < winLines.length; i++) {
+        var l = winLines[i];
+        if (b[l[0]] === mark && b[l[1]] === mark && b[l[2]] === mark) return l;
+    }
+    return null;
+}
+
 function computerChooseMove(currentBoard) {
     var empty = [];
+    var corners = [0, 2, 6, 8];
     for (var i = 0; i < 9; i++) {
         if (currentBoard[i] === "") empty.push(i);
     }
+
+    // Check for an immediate winning move
+    for (var i = 0; i < empty.length; i++) {
+        currentBoard[empty[i]] = "O";
+        if (checkWinOn(currentBoard, "O")) {
+            currentBoard[empty[i]] = "";
+            return empty[i];
+        }
+        currentBoard[empty[i]] = "";
+    }
+
+    // Block player's immediate winning move
+    for (var i = 0; i < empty.length; i++) {
+        currentBoard[empty[i]] = "X";
+        if (checkWinOn(currentBoard, "X")) {
+            currentBoard[empty[i]] = "";
+            return empty[i];
+        }
+        currentBoard[empty[i]] = "";
+    }
+
+    // Opening: computer goes first (board is empty)
+    if (empty.length === 9) {
+        return corners[Math.floor(Math.random() * corners.length)];
+    }
+
+    // Response: computer goes second (one X on the board)
+    if (empty.length === 8) {
+        if (currentBoard[4] === "X") {
+            // X took center → play a random corner
+            return corners[Math.floor(Math.random() * corners.length)];
+        } else {
+            // X took edge or corner → play center
+            return 4;
+        }
+    }
+
+    // Third move: computer went first (empty.length === 7)
+    if (empty.length === 7) {
+        var oppositeCorner = {0: 8, 2: 6, 6: 2, 8: 0};
+        var adjacentEdges = {0: [1, 3], 2: [1, 5], 6: [3, 7], 8: [5, 7]};
+        var edgeAdjacentCorners = {1: [0, 2], 3: [0, 6], 5: [2, 8], 7: [6, 8]};
+
+        // Find computer's first corner and X's response
+        var myCorner = -1;
+        var theirMove = -1;
+        for (var i = 0; i < 9; i++) {
+            if (currentBoard[i] === "O") myCorner = i;
+            if (currentBoard[i] === "X") theirMove = i;
+        }
+
+        if (theirMove === 4) {
+            // X played center → opposite corner
+            return oppositeCorner[myCorner];
+        } else if (corners.indexOf(theirMove) >= 0) {
+            // X played any corner → random remaining corner
+            var remaining = [];
+            for (var i = 0; i < corners.length; i++) {
+                if (corners[i] !== myCorner && corners[i] !== theirMove) remaining.push(corners[i]);
+            }
+            return remaining[Math.floor(Math.random() * remaining.length)];
+        } else if (adjacentEdges[myCorner].indexOf(theirMove) >= 0) {
+            // X played adjacent edge → center
+            return 4;
+        } else if ([1, 3, 5, 7].indexOf(theirMove) >= 0) {
+            // X played non-adjacent edge → 50/50 center or adjacent corner (not opposite of first)
+            if (Math.random() < 0.5) {
+                return 4;
+            }
+            var candidates = edgeAdjacentCorners[theirMove];
+            var opp = oppositeCorner[myCorner];
+            for (var i = 0; i < candidates.length; i++) {
+                if (candidates[i] !== opp) return candidates[i];
+            }
+        }
+    }
+
+    // Fourth move: computer went second (empty.length === 6)
+    if (empty.length === 6) {
+        var adjacentEdges = {0: [1, 3], 2: [1, 5], 6: [3, 7], 8: [5, 7]};
+        var oppositeCorner = {0: 8, 2: 6, 6: 2, 8: 0};
+
+        var emptyCorners = [];
+        for (var i = 0; i < corners.length; i++) {
+            if (currentBoard[corners[i]] === "") emptyCorners.push(corners[i]);
+        }
+
+        // All four corners available → play one with exactly one adjacent filled edge
+        if (emptyCorners.length === 4) {
+            var candidates = [];
+            for (var i = 0; i < corners.length; i++) {
+                var adj = adjacentEdges[corners[i]];
+                var filled = (currentBoard[adj[0]] !== "" ? 1 : 0) + (currentBoard[adj[1]] !== "" ? 1 : 0);
+                if (filled === 1) candidates.push(corners[i]);
+            }
+            if (candidates.length > 0) {
+                return candidates[Math.floor(Math.random() * candidates.length)];
+            }
+        }
+
+        // Exactly three corners available → play opposite of the occupied one
+        if (emptyCorners.length === 3) {
+            for (var i = 0; i < corners.length; i++) {
+                if (currentBoard[corners[i]] !== "" && currentBoard[corners[i]] !== "O") {
+                    return oppositeCorner[corners[i]];
+                }
+            }
+        }
+
+        // Exactly two corners available
+        if (emptyCorners.length === 2) {
+            // Both occupied corners are player's → play a random edge
+            var occupiedByX = 0;
+            for (var i = 0; i < corners.length; i++) {
+                if (currentBoard[corners[i]] === "X") occupiedByX++;
+            }
+            if (occupiedByX === 2) {
+                var emptyEdges = [];
+                for (var i = 0; i < [1, 3, 5, 7].length; i++) {
+                    if (currentBoard[[1, 3, 5, 7][i]] === "") emptyEdges.push([1, 3, 5, 7][i]);
+                }
+                return emptyEdges[Math.floor(Math.random() * emptyEdges.length)];
+            }
+            return emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
+        }
+    }
+
+    // Sixth move: computer went second (empty.length === 4)
+    if (empty.length === 4) {
+        var adjacentEdges = {0: [1, 3], 2: [1, 5], 6: [3, 7], 8: [5, 7]};
+
+        // Corner without an adjacent player piece
+        var safeCorners = [];
+        for (var i = 0; i < corners.length; i++) {
+            if (currentBoard[corners[i]] !== "") continue;
+            var adj = adjacentEdges[corners[i]];
+            if (currentBoard[adj[0]] !== "X" && currentBoard[adj[1]] !== "X") {
+                safeCorners.push(corners[i]);
+            }
+        }
+        if (safeCorners.length > 0) {
+            return safeCorners[Math.floor(Math.random() * safeCorners.length)];
+        }
+
+        // No safe corners: if computer has center, play a random corner
+        if (currentBoard[4] === "O") {
+            var emptyCorners = [];
+            for (var i = 0; i < corners.length; i++) {
+                if (currentBoard[corners[i]] === "") emptyCorners.push(corners[i]);
+            }
+            if (emptyCorners.length > 0) {
+                return emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
+            }
+        }
+
+        // Otherwise random available edge
+        var emptyEdges = [];
+        var edges = [1, 3, 5, 7];
+        for (var i = 0; i < edges.length; i++) {
+            if (currentBoard[edges[i]] === "") emptyEdges.push(edges[i]);
+        }
+        if (emptyEdges.length > 0) {
+            return emptyEdges[Math.floor(Math.random() * emptyEdges.length)];
+        }
+    }
+
+    // Fifth move: computer went first (empty.length === 5)
+    if (empty.length === 5) {
+        var adjacentEdges = {0: [1, 3], 2: [1, 5], 6: [3, 7], 8: [5, 7]};
+
+        // Find empty corners
+        var emptyCorners = [];
+        for (var i = 0; i < corners.length; i++) {
+            if (currentBoard[corners[i]] === "") emptyCorners.push(corners[i]);
+        }
+
+        // Only one empty corner → play it
+        if (emptyCorners.length === 1) {
+            return emptyCorners[0];
+        }
+
+        // Center not available → play corner with two empty adjacent edges
+        if (currentBoard[4] !== "") {
+            for (var i = 0; i < emptyCorners.length; i++) {
+                var adj = adjacentEdges[emptyCorners[i]];
+                if (currentBoard[adj[0]] === "" && currentBoard[adj[1]] === "") {
+                    return emptyCorners[i];
+                }
+            }
+        }
+
+        // 50/50: center or corner with both adjacent edges empty
+        var cornerNoAdj = -1;
+        for (var i = 0; i < emptyCorners.length; i++) {
+            var adj = adjacentEdges[emptyCorners[i]];
+            if (currentBoard[adj[0]] === "" && currentBoard[adj[1]] === "") {
+                cornerNoAdj = emptyCorners[i];
+                break;
+            }
+        }
+        if (cornerNoAdj >= 0 && currentBoard[4] === "") {
+            return Math.random() < 0.5 ? 4 : cornerNoAdj;
+        } else if (cornerNoAdj >= 0) {
+            return cornerNoAdj;
+        } else if (currentBoard[4] === "") {
+            return 4;
+        }
+    }
+
+    // Fallback: random empty cell
     return empty[Math.floor(Math.random() * empty.length)];
 }
 
