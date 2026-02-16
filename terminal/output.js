@@ -1,6 +1,16 @@
 import { state, dom, callbacks } from './state.js';
+import { isMobile } from './manifest.js';
 import { pathSegments, getNode, isTopLevelDir } from './path.js';
 import { getPromptHTML, updatePrompt } from './input.js';
+
+// --- Conditional text: {{desktop text}{mobile text}} ---
+const conditionalPattern = /\{\{([^}]*)\}\{([^}]*)\}\}/g;
+
+export function resolveConditional(text) {
+    return text.replace(conditionalPattern, function (_, desktop, mobile) {
+        return isMobile ? mobile : desktop;
+    });
+}
 
 // --- Link detection ---
 const linkPattern = /(https?:\/\/[^\s]+)|([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})|([a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
@@ -132,6 +142,12 @@ export function animateOutput(elements, callback) {
     let elIdx = 0;
     let charIdx = 0;
     state.currentAnimation = { elements, elIdx, callback };
+
+    for (let i = 0; i < elements.length; i++) {
+        if (elements[i]._fullText) {
+            elements[i]._fullText = resolveConditional(elements[i]._fullText);
+        }
+    }
 
     let totalChars = 0;
     for (let i = 0; i < elements.length; i++) {

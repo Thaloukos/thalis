@@ -22,7 +22,9 @@ npx serve
 - **Reorder subpages**: Create `pages/Page/.order` with one name per line
 - **New executable**: Create `executables/Page/name.js` (ES module exporting `start`, `stop`, `handleResize`), optionally `name.txt` for help text
 - **Page links in content**: Use `[link text](~/Path)` syntax in `.txt` files
+- **Conditional text**: Use `{{desktop text}{mobile text}}` in `.txt` files to show different content per device
 - **Hide pages on mobile**: Add page name to `pages/.mobile-hidden`
+- **Hide executables on mobile**: Add executable name to `executables/Page/.mobile-hidden`
 
 ## OG image
 

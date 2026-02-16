@@ -633,12 +633,12 @@ function drawHUD(buf) {
     var hint = "WASD:swim  Space/Shift:up/down  Mouse:look  ESC:exit";
     if (hint.length > buf.w) hint = "WASD Space/Shift Mouse ESC:exit";
     var x = Math.floor((buf.w - hint.length) / 2);
-    drawString(buf, x, buf.h - 1, hint, CFG.COLORS.hud);
+    drawString(buf, x, buf.h - 2, hint, CFG.COLORS.hud);
 
     // Depth indicator
     var depthPct = ((player.pos.y + CFG.TANK_H / 2) / CFG.TANK_H * 100);
     var depthStr = "depth:" + Math.round(100 - depthPct) + "%";
-    drawString(buf, buf.w - depthStr.length - 1, 0, depthStr, CFG.COLORS.hudHighlight);
+    drawString(buf, buf.w - depthStr.length - 1, 1, depthStr, CFG.COLORS.hudHighlight);
 }
 
 // ========== INPUT ==========

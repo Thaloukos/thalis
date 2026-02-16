@@ -1,0 +1,14 @@
+tic_tac_toe - Tic-Tac-Toe
+
+Play Tic-Tac-Toe against the computer.
+You are X, the computer is O.
+First player is either the last loser, or decided through a coin flip.
+
+Controls:
+  1-9           Place mark (numpad layout)
+  Click         Place mark on cell
+  Escape        Exit
+
+See if you can't defeat the all powerful Tic-Tac-Toe AI!
+
+Usage: run the 'tic_tac_toe' executable to play

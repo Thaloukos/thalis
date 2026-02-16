@@ -56,6 +56,13 @@ function scanExecutables(dir, prefix) {
     const dirs = entries.filter(e => e.isDirectory());
     const jsFiles = entries.filter(e => e.isFile() && e.name.endsWith(".js"));
 
+    // Read mobile-hidden executables for this directory
+    const mobileHiddenFile = path.join(dir, ".mobile-hidden");
+    let mobileHiddenExecs = [];
+    if (fs.existsSync(mobileHiddenFile)) {
+        mobileHiddenExecs = fs.readFileSync(mobileHiddenFile, "utf-8").split("\n").map(l => l.trim()).filter(Boolean);
+    }
+
     // Collect executables at this level
     const execs = {};
     for (const f of jsFiles) {
@@ -67,6 +74,9 @@ function scanExecutables(dir, prefix) {
         const helpFile = path.join(dir, name + ".txt");
         if (fs.existsSync(helpFile)) {
             entry.help = "/" + (prefix ? prefix + "/" + name + ".txt" : "executables/" + name + ".txt");
+        }
+        if (mobileHiddenExecs.includes(name)) {
+            entry.mobileHidden = true;
         }
         execs[name] = entry;
     }
@@ -123,14 +133,7 @@ function buildManifest() {
         order = Object.keys(tree).sort();
     }
 
-    // Read mobile-hidden pages
-    let mobileHidden = [];
-    const mobileHiddenFile = path.join(PAGES_DIR, ".mobile-hidden");
-    if (fs.existsSync(mobileHiddenFile)) {
-        mobileHidden = fs.readFileSync(mobileHiddenFile, "utf-8").split("\n").map(l => l.trim()).filter(Boolean);
-    }
-
-    return { order, mobileHidden, tree };
+    return { order, tree };
 }
 
 function validateOrderFiles() {

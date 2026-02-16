@@ -6,9 +6,6 @@
     "Games",
     "Contact"
   ],
-  "mobileHidden": [
-    "Games"
-  ],
   "tree": {
     ".todo": {
       "content": "pages/.todo.txt"
@@ -52,7 +49,12 @@
       "executables": {
         "fih": {
           "src": "/executables/Games/fih.js",
-          "help": "/executables/Games/fih.txt"
+          "help": "/executables/Games/fih.txt",
+          "mobileHidden": true
+        },
+        "tic_tac_toe": {
+          "src": "/executables/Games/tic_tac_toe.js",
+          "help": "/executables/Games/tic_tac_toe.txt"
         }
       }
     },

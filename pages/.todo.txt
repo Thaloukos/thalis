@@ -1,6 +1,5 @@
 # Upcoming Additions:
-- Ctrl+R recursive search
 - More games:
     * Snake?
-    * TicTacToe ("AI" opponent)
-- More easter eggs & hidden files
+- Maybe some initial project:
+    * Perhaps a visualization of a CNN or something

@@ -1,7 +1,7 @@
 import { state, dom, callbacks } from './state.js';
 import { resolvePath, pathSegments, relativeCd, getNode, isTopLevelDir } from './path.js';
 import { renderInput, clearInput, setInput, wordLeft, wordRight, removeHint, showHint, updatePrompt, nodeHasContents, renderSearch } from './input.js';
-import { addLine, addPromptLine, scrollToBottom, skipAnimation, enqueueOrRun } from './output.js';
+import { addLine, addPromptLine, scrollToBottom, skipAnimation, enqueueOrRun, resolveConditional } from './output.js';
 import { processCommand, welcomeText } from './commands.js';
 import { stopExecutable } from './executables.js';
 import { getCompletions } from './completion.js';
@@ -498,7 +498,7 @@ export function boot() {
     });
 
     // Welcome message
-    const welcomeLine = addLine(welcomeText);
+    const welcomeLine = addLine(resolveConditional(welcomeText));
     welcomeLine.style.color = "#666";
     welcomeLine.classList.add("welcome");
     addLine("");
