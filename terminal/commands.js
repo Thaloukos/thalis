@@ -222,6 +222,10 @@ export function processCommand(cmd, silent) {
             scrollToBottom();
             return;
 
+        case "hostname":
+            elements.push(makeLineNode("thalis.sh"));
+            break;
+
         case "claude": {
             const claude = [
                 "",
