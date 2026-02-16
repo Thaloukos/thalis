@@ -1,7 +1,9 @@
 /**
- * ttt — Tic-Tac-Toe
+ * tic_tac_toe — Tic-Tac-Toe
  * Player (X) vs Computer (O). Coin flip decides who goes first.
  */
+
+var isMobile = window.matchMedia("(pointer: coarse)").matches;
 
 // ========== CONFIG ==========
 var CFG = {
@@ -37,15 +39,18 @@ var buf = null;
 function createBuffer(w, h) {
     var chars = [];
     var colors = [];
+    var underlines = [];
     for (var i = 0; i < h; i++) {
         chars[i] = [];
         colors[i] = [];
+        underlines[i] = [];
         for (var j = 0; j < w; j++) {
             chars[i][j] = " ";
             colors[i][j] = null;
+            underlines[i][j] = false;
         }
     }
-    return { w: w, h: h, chars: chars, colors: colors };
+    return { w: w, h: h, chars: chars, colors: colors, underlines: underlines };
 }
 
 function clearBuffer(b) {
@@ -53,20 +58,28 @@ function clearBuffer(b) {
         for (var x = 0; x < b.w; x++) {
             b.chars[y][x] = " ";
             b.colors[y][x] = null;
+            b.underlines[y][x] = false;
         }
     }
 }
 
-function setCell(b, x, y, ch, color) {
+function setCell(b, x, y, ch, color, underline) {
     if (x >= 0 && x < b.w && y >= 0 && y < b.h) {
         b.chars[y][x] = ch;
         b.colors[y][x] = color || null;
+        b.underlines[y][x] = !!underline;
     }
 }
 
 function drawString(b, x, y, str, color) {
     for (var i = 0; i < str.length; i++) {
-        setCell(b, x + i, y, str[i], color);
+        setCell(b, x + i, y, str[i], color, false);
+    }
+}
+
+function drawStringUnderline(b, x, y, str, color) {
+    for (var i = 0; i < str.length; i++) {
+        setCell(b, x + i, y, str[i], color, true);
     }
 }
 
@@ -74,29 +87,36 @@ function renderBufferToDOM(b) {
     if (!preEl) return;
     var parts = [];
     var lastColor = null;
+    var lastUL = false;
     for (var y = 0; y < b.h; y++) {
         for (var x = 0; x < b.w; x++) {
             var c = b.colors[y][x];
+            var ul = b.underlines[y][x];
             var ch = b.chars[y][x];
-            if (c !== lastColor) {
-                if (lastColor !== null) parts.push("</span>");
-                if (c !== null) {
-                    parts.push('<span style="color:' + c + '">');
+            if (c !== lastColor || ul !== lastUL) {
+                if (lastColor !== null || lastUL) parts.push("</span>");
+                if (c !== null || ul) {
+                    var style = "";
+                    if (c) style += "color:" + c + ";";
+                    if (ul) style += "text-decoration:underline;cursor:pointer;";
+                    parts.push('<span style="' + style + '">');
                 }
                 lastColor = c;
+                lastUL = ul;
             }
             if (ch === "<") ch = "&lt;";
             else if (ch === ">") ch = "&gt;";
             else if (ch === "&") ch = "&amp;";
             parts.push(ch);
         }
-        if (lastColor !== null) {
+        if (lastColor !== null || lastUL) {
             parts.push("</span>");
             lastColor = null;
+            lastUL = false;
         }
         if (y < b.h - 1) parts.push("\n");
     }
-    if (lastColor !== null) parts.push("</span>");
+    if (lastColor !== null || lastUL) parts.push("</span>");
     preEl.innerHTML = parts.join("");
 }
 
@@ -660,6 +680,11 @@ var gameOverResult = "";     // "win", "lose", "draw"
 var computerMoveTimer = 0;
 var lastLoser = "";          // "X", "O", or "" (draw)
 
+// Mobile Exit button region (buffer coordinates)
+var exitBtnX = -1;
+var exitBtnY = -1;
+var exitBtnLen = 0;
+
 function resetBoard() {
     for (var i = 0; i < 9; i++) board[i] = "";
     winningLine = null;
@@ -782,7 +807,6 @@ function onKeyDown(e) {
 }
 
 function onClick(e) {
-    if (gameState !== "PLAYING" || currentTurn !== "X") return;
     if (!preEl || !buf) return;
 
     // Calculate character size
@@ -793,6 +817,14 @@ function onClick(e) {
     // Map pixel to buffer coordinates
     var bx = Math.floor((e.clientX - rect.left) / charW);
     var by = Math.floor((e.clientY - rect.top) / charH);
+
+    // Check Exit button click (mobile)
+    if (exitBtnLen > 0 && by === exitBtnY && bx >= exitBtnX && bx < exitBtnX + exitBtnLen) {
+        exitGame();
+        return;
+    }
+
+    if (gameState !== "PLAYING" || currentTurn !== "X") return;
 
     // Map buffer coords to board cell
     var relX = bx - boardOriginX;
@@ -860,20 +892,48 @@ function tick(timestamp) {
     }
 
     // HUD
-    var hint = "1-9:place  Click:place  ESC:exit";
-    if (gameState === "PLAYING") {
-        if (currentTurn === "X") {
-            hint = "Your turn! 1-9:place  Click:place  ESC:exit";
-        } else {
-            hint = "Computer thinking...  ESC:exit";
+    var hudY = buf.h - 1;
+    exitBtnX = -1;
+    exitBtnY = -1;
+    exitBtnLen = 0;
+
+    if (isMobile) {
+        var hint = "";
+        var exitText = "Exit";
+        if (gameState === "PLAYING") {
+            if (currentTurn === "X") {
+                hint = "Your turn!  Tap: place  ";
+            } else {
+                hint = "Computer thinking...  ";
+            }
         }
-    } else if (gameState === "COIN_FLIP") {
-        hint = "ESC:exit";
-    } else if (gameState === "GAME_OVER") {
-        hint = "ESC:exit";
+        // hint + Exit
+        var totalLen = hint.length + exitText.length;
+        var sx = Math.floor(buf.w / 2) - Math.floor(totalLen / 2);
+        if (hint.length > 0) {
+            drawString(buf, sx, hudY, hint, CFG.COLORS.hud);
+        }
+        var exitX = sx + hint.length;
+        drawStringUnderline(buf, exitX, hudY, exitText, CFG.COLORS.computerO);
+        exitBtnX = exitX;
+        exitBtnY = hudY;
+        exitBtnLen = exitText.length;
+    } else {
+        var hint = "1-9:place  Click:place  ESC:exit";
+        if (gameState === "PLAYING") {
+            if (currentTurn === "X") {
+                hint = "Your turn! 1-9:place  Click:place  ESC:exit";
+            } else {
+                hint = "Computer thinking...  ESC:exit";
+            }
+        } else if (gameState === "COIN_FLIP") {
+            hint = "ESC:exit";
+        } else if (gameState === "GAME_OVER") {
+            hint = "ESC:exit";
+        }
+        var cx = Math.floor(buf.w / 2);
+        drawString(buf, cx - Math.floor(hint.length / 2), hudY, hint, CFG.COLORS.hud);
     }
-    var cx = Math.floor(buf.w / 2);
-    drawString(buf, cx - Math.floor(hint.length / 2), buf.h - 1, hint, CFG.COLORS.hud);
 
     renderBufferToDOM(buf);
 }

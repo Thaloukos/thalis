@@ -1,7 +1,7 @@
 import { state, dom } from './state.js';
 import { isMobile, pageNames, tree } from './manifest.js';
 import { resolvePath, pathSegments, getNode, cdCommandFor, relativeCd, isTopLevelDir, isDirectory } from './path.js';
-import { addPromptLine, makeLineNode, makeClickableNode, makeSubpageNode, makeExecNode, makeColoredNode, animateOutput, scrollToBottom } from './output.js';
+import { addPromptLine, makeLineNode, makeClickableNode, makeSubpageNode, makeExecNode, makeColoredNode, animateOutput, scrollToBottom, resolveConditional } from './output.js';
 import { updatePrompt, nodeHasContents } from './input.js';
 import { resolveExecutable, startExecutable } from './executables.js';
 
@@ -21,9 +21,7 @@ const sneakyCommands = [
     "reboot", "shutdown", "halt", "poweroff", "watch"
 ];
 
-export const welcomeText = isMobile
-    ? "Welcome! Tap on the screen to view current page content or navigate with the buttons ^"
-    : "Welcome! Type 'help' for available commands, or click a button ^";
+export const welcomeText = resolveConditional("Welcome! {{Type 'help' for available commands, or click a button}{Tap on the screen to view current page content or navigate with the buttons}} ^");
 
 export function processCommand(cmd, silent) {
     const trimmed = cmd.trim();
@@ -119,15 +117,14 @@ export function processCommand(cmd, silent) {
                         }));
                     }
                     // Show executables
-                    if (!isMobile) {
-                        for (const execName of Object.keys(node.executables)) {
-                            if (!showAll && execName.startsWith(".")) continue;
-                            elements.push(makeExecNode(execName, () => {
-                                if (state.currentPath === listPath) return "sh " + execName;
-                                const nav = relativeCd(listPath);
-                                return nav ? nav + " && sh " + execName : "sh " + execName;
-                            }));
-                        }
+                    for (const execName of Object.keys(node.executables)) {
+                        if (!showAll && execName.startsWith(".")) continue;
+                        if (isMobile && node.executables[execName].mobileHidden) continue;
+                        elements.push(makeExecNode(execName, () => {
+                            if (state.currentPath === listPath) return "sh " + execName;
+                            const nav = relativeCd(listPath);
+                            return nav ? nav + " && sh " + execName : "sh " + execName;
+                        }));
                     }
                 }
             }
@@ -157,9 +154,9 @@ export function processCommand(cmd, silent) {
             const target = args[0];
 
             // Handle cat <executable> — resolve via executable paths
-            if (target && !isMobile) {
+            if (target) {
                 const exec = resolveExecutable(target);
-                if (exec) {
+                if (exec && !(isMobile && exec.mobileHidden)) {
                     state.catUsed = true;
                     const helpText = exec.help || (exec.name + ": no help available");
                     helpText.split("\n").forEach(line => elements.push(makeLineNode(line || "\u00a0")));
@@ -251,8 +248,8 @@ export function processCommand(cmd, silent) {
             }
             const shExec = resolveExecutable(target);
             if (shExec) {
-                if (isMobile) {
-                    elements.push(makeLineNode(target + ": executables are not available on mobile devices"));
+                if (isMobile && shExec.mobileHidden) {
+                    elements.push(makeLineNode(target + ": not available on mobile devices"));
                     break;
                 }
                 state.animating = true;
@@ -267,8 +264,8 @@ export function processCommand(cmd, silent) {
             if (command.startsWith("./") || command.startsWith("~/") || command.startsWith("../") || command.includes("/")) {
                 const pathExec = resolveExecutable(command);
                 if (pathExec) {
-                    if (isMobile) {
-                        elements.push(makeLineNode(command + ": executables are not available on mobile devices"));
+                    if (isMobile && pathExec.mobileHidden) {
+                        elements.push(makeLineNode(command + ": not available on mobile devices"));
                         break;
                     }
                     state.animating = true;

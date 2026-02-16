@@ -69,7 +69,7 @@ export function removeHint() {
 export function nodeHasContents(node) {
     if (!node) return false;
     if (Object.keys(node.children).some(c => !c.startsWith("."))) return true;
-    if (!isMobile && Object.keys(node.executables).some(e => !e.startsWith("."))) return true;
+    if (Object.keys(node.executables).some(e => !e.startsWith(".") && !(isMobile && node.executables[e].mobileHidden))) return true;
     return false;
 }
 

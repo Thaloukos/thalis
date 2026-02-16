@@ -1,7 +1,6 @@
 export const isMobile = window.matchMedia("(pointer: coarse)").matches;
 export let pageNames = [];
 export const tree = {};
-export let mobileHiddenPages = [];
 
 function buildNode(entry) {
     const node = { content: null, children: {}, childOrder: [], executables: {} };
@@ -15,7 +14,7 @@ function buildNode(entry) {
     else if (entry.children) node.childOrder = Object.keys(entry.children);
     if (entry.executables) {
         for (const [ek, ev] of Object.entries(entry.executables)) {
-            node.executables[ek] = { name: ek, src: ev.src, help: null, _helpPath: ev.help || null };
+            node.executables[ek] = { name: ek, src: ev.src, help: null, _helpPath: ev.help || null, mobileHidden: ev.mobileHidden || false };
         }
     }
     return node;
@@ -24,8 +23,7 @@ function buildNode(entry) {
 export async function loadManifest() {
     const nocache = "?v=" + Date.now();
     const manifest = await fetch("/manifest.json" + nocache).then(r => r.json());
-    mobileHiddenPages = manifest.mobileHidden || [];
-    pageNames = manifest.order.filter(name => !isMobile || !mobileHiddenPages.includes(name));
+    pageNames = manifest.order;
 
     for (const [key, entry] of Object.entries(manifest.tree)) {
         tree[key] = buildNode(entry);

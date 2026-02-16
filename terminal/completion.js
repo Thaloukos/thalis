@@ -3,9 +3,7 @@ import { isMobile, tree } from './manifest.js';
 import { getNode, parentOf, pathSegments, resolveFrom, isTopLevelDir } from './path.js';
 
 // --- Tab completion ---
-const commandNames = isMobile
-    ? ["help", "ls", "cd", "cat", "clear", "claude", "echo"]
-    : ["help", "ls", "cd", "cat", "clear", "claude", "echo", "sh"];
+const commandNames = ["help", "ls", "cd", "cat", "clear", "claude", "echo", "sh"];
 const argCommands = ["cd", "cat", "ls", "sh"];
 
 function getNodeChildren(p) {
@@ -19,7 +17,7 @@ function getNodeExecs(p) {
     if (p === "~") return [];
     const node = getNode(p);
     if (!node) return [];
-    return Object.keys(node.executables);
+    return Object.keys(node.executables).filter(e => !(isMobile && node.executables[e].mobileHidden));
 }
 
 function getCompletionTargets(argPrefix, cmd) {
@@ -98,7 +96,7 @@ function getCompletionTargets(argPrefix, cmd) {
     }
 
     // Add executables (never for cd)
-    if (!isMobile && !isDirOnly) {
+    if (!isDirOnly) {
         const execs = getNodeExecs(basePath);
         for (const exec of execs) {
             if (!showHidden && exec.startsWith(".")) continue;
