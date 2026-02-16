@@ -85,3 +85,14 @@ export function setInput(text) {
     state.cursorPos = text.length;
     renderInput();
 }
+
+// --- Reverse search display ---
+export function renderSearch(match) {
+    dom.cursorEl.style.animation = 'none';
+    dom.cursorEl.offsetHeight;
+    dom.cursorEl.style.animation = '';
+    dom.promptEl.textContent = "(reverse-i-search)'" + state.searchQuery + "': ";
+    dom.inputBefore.textContent = match || "";
+    dom.cursorEl.textContent = "";
+    dom.inputAfter.textContent = "";
+}

@@ -1,12 +1,29 @@
 import { state, dom, callbacks } from './state.js';
 import { resolvePath, pathSegments, relativeCd, getNode, isTopLevelDir } from './path.js';
-import { renderInput, clearInput, setInput, wordLeft, wordRight, removeHint, showHint, updatePrompt, nodeHasContents } from './input.js';
+import { renderInput, clearInput, setInput, wordLeft, wordRight, removeHint, showHint, updatePrompt, nodeHasContents, renderSearch } from './input.js';
 import { addLine, addPromptLine, scrollToBottom, skipAnimation, enqueueOrRun } from './output.js';
 import { processCommand, welcomeText } from './commands.js';
 import { stopExecutable } from './executables.js';
 import { getCompletions } from './completion.js';
 
 const isMac = /mac/i.test(navigator.userAgent);
+
+// --- Reverse search helpers ---
+function findHistoryMatch(query, fromIndex) {
+    if (!query) return fromIndex >= 0 ? fromIndex : -1;
+    const start = Math.min(fromIndex, state.commandHistory.length - 1);
+    for (let i = start; i >= 0; i--) {
+        if (state.commandHistory[i].includes(query)) return i;
+    }
+    return -1;
+}
+
+function getSearchMatch() {
+    if (state.searchIndex < 0 || state.searchIndex >= state.commandHistory.length) return "";
+    const cmd = state.commandHistory[state.searchIndex];
+    if (!state.searchQuery) return cmd || "";
+    return cmd && cmd.includes(state.searchQuery) ? cmd : "";
+}
 
 // --- Simulate typing ---
 function simulateCommand(cmd) {
@@ -102,6 +119,76 @@ export function boot() {
 
         if (state.animating) return;
 
+        // Reverse search mode
+        if (state.searchMode) {
+            if (e.key === "Escape" || (e.ctrlKey && (e.code === "KeyG" || e.code === "KeyC"))) {
+                e.preventDefault();
+                state.searchMode = false;
+                state.searchQuery = "";
+                clearInput();
+                updatePrompt();
+                return;
+            }
+            if (e.ctrlKey && e.code === "KeyR") {
+                e.preventDefault();
+                const from = state.searchIndex - 1;
+                if (from >= 0) {
+                    const idx = findHistoryMatch(state.searchQuery, from);
+                    if (idx !== -1) state.searchIndex = idx;
+                }
+                renderSearch(getSearchMatch());
+                return;
+            }
+            if (e.key === "Backspace") {
+                e.preventDefault();
+                if (state.searchQuery.length === 0) {
+                    state.searchMode = false;
+                    clearInput();
+                    updatePrompt();
+                } else {
+                    state.searchQuery = state.searchQuery.slice(0, -1);
+                    if (state.searchQuery === "") {
+                        state.searchIndex = state.commandHistory.length;
+                        renderSearch("");
+                    } else {
+                        const idx = findHistoryMatch(state.searchQuery, state.commandHistory.length - 1);
+                        state.searchIndex = idx !== -1 ? idx : -1;
+                        renderSearch(getSearchMatch());
+                    }
+                }
+                return;
+            }
+            if (e.key === "Enter") {
+                // Accept match — exit search and fall through to normal Enter
+                const match = getSearchMatch();
+                state.searchMode = false;
+                state.searchQuery = "";
+                state.inputBuffer = match;
+                state.cursorPos = match.length;
+                updatePrompt();
+                // Don't return — let normal Enter handler process the command
+            } else if (e.key === "ArrowRight" || e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "ArrowDown") {
+                // Accept match and allow editing
+                e.preventDefault();
+                const match = getSearchMatch();
+                state.searchMode = false;
+                state.searchQuery = "";
+                updatePrompt();
+                if (match) setInput(match);
+                removeHint();
+                return;
+            } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                state.searchQuery += e.key;
+                const idx = findHistoryMatch(state.searchQuery, state.searchIndex);
+                if (idx !== -1) state.searchIndex = idx;
+                renderSearch(getSearchMatch());
+                return;
+            } else {
+                return;
+            }
+        }
+
         if (e.ctrlKey && !e.metaKey && !e.altKey) {
             if (!isMac && e.key === "ArrowLeft") {
                 e.preventDefault();
@@ -176,6 +263,15 @@ export function boot() {
                 state.cursorPos = newPos;
                 renderInput();
                 if (state.inputBuffer === "") showHint();
+                return;
+            }
+            if (e.code === "KeyR") {
+                e.preventDefault();
+                removeHint();
+                state.searchMode = true;
+                state.searchQuery = "";
+                state.searchIndex = state.commandHistory.length;
+                renderSearch("");
                 return;
             }
             return;

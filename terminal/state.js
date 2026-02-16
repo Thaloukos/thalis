@@ -13,6 +13,9 @@ export const state = {
     currentAnimation: null,
     catUsed: false,
     hintEl: null,
+    searchMode: false,
+    searchQuery: "",
+    searchIndex: -1,
 };
 
 // DOM refs populated by initDOM()
