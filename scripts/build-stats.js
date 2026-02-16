@@ -61,7 +61,9 @@ function formatNumber(n) {
 // --- Git stats ---
 function getCommitCount() {
     try {
-        const count = parseInt(execSync("git rev-list --count --first-parent main", { cwd: ROOT, stdio: ["pipe", "pipe", "pipe"] }).toString().trim());
+        // Fetch latest main to get accurate count
+        execSync("git fetch origin main --quiet", { cwd: ROOT, stdio: ["pipe", "pipe", "pipe"] });
+        const count = parseInt(execSync("git rev-list --count --first-parent origin/main", { cwd: ROOT, stdio: ["pipe", "pipe", "pipe"] }).toString().trim());
         return count + 1; // +1 for the squash merge being made
     } catch {
         return 1;
