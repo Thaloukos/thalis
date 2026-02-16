@@ -807,6 +807,7 @@ function onKeyDown(e) {
 }
 
 function onClick(e) {
+    e.preventDefault();
     if (!preEl || !buf) return;
 
     // Calculate character size
