@@ -5,13 +5,37 @@ import { addPromptLine, makeLineNode, makeClickableNode, makeSubpageNode, makeEx
 import { updatePrompt, nodeHasContents } from './input.js';
 import { resolveExecutable, startExecutable } from './executables.js';
 
+const wittyCommands = {
+    date: "sorry, I'm taken",
+    env: "cozy, thanks for asking",
+    exit: "there is no escape",
+    finger: "that's rude",
+    fork: "spoon",
+    fsck: "language!",
+    head: "shoulders, knees and toes",
+    history: "what happens in the terminal stays in the terminal",
+    jobs: "market looking rough right now eh?",
+    less: "is more",
+    man: "no need to conform to gender binaries",
+    more: "or less",
+    mount: "neigh",
+    ping: "pong",
+    sleep: "none for the wicked",
+    ssh: "shell already secure, don't worry",
+    top: "I'm flattered",
+    touch: "that's inappropriate",
+    watch: "👀",
+    which: "witch?",
+    whoami: "why are you being philosophical?",
+};
+
 const sneakyCommands = [
     "rm", "mv", "cp", "mkdir", "rmdir", "touch", "chmod", "chown", "chgrp",
     "ln", "find", "grep", "sed", "awk", "sort", "uniq", "wc", "diff",
     "tar", "zip", "unzip", "gzip", "gunzip", "curl", "wget", "ssh", "scp",
     "ping", "traceroute", "netstat", "ifconfig", "ip", "dig", "nslookup",
     "ps", "top", "htop", "kill", "killall", "df", "du", "free", "mount",
-    "umount", "fdisk", "mkfs", "dd", "whoami", "id", "su", "passwd",
+    "umount", "fdisk", "mkfs", "dd", "id", "su", "passwd",
     "useradd", "userdel", "groupadd", "crontab", "systemctl", "service",
     "journalctl", "dmesg", "lsof", "strace", "nmap", "iptables",
     "apt", "yum", "dnf", "pacman", "brew", "pip", "npm", "git",
@@ -273,6 +297,8 @@ export function processCommand(cmd, silent) {
                     return;
                 }
                 elements.push(makeLineNode(command + ": not executable"));
+            } else if (wittyCommands[command]) {
+                elements.push(makeLineNode(command + ": " + wittyCommands[command]));
             } else if (sneakyCommands.includes(command)) {
                 elements.push(makeLineNode(command + ": why are you trying to be sneaky?"));
             } else {
