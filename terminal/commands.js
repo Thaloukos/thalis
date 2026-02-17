@@ -152,6 +152,7 @@ export function processCommand(cmd, silent) {
                     }
                 }
             }
+            if (elements.length > 0) elements.push(makeLineNode("\u00a0"));
             break;
         }
 
