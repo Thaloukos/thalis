@@ -1,12 +1,16 @@
 {
   "order": [
     ".todo",
+    ".danae",
     "About",
     "Projects",
     "Games",
     "Contact"
   ],
   "tree": {
+    ".danae": {
+      "content": "pages/.danae.txt"
+    },
     ".todo": {
       "content": "pages/.todo.txt"
     },
